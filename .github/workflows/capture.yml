@@ -1,0 +1,39 @@
+name: Capture daily news
+
+on:
+  schedule:
+    # times are UTC. Runs at 07:00 and 19:00 UTC daily (~twice a day).
+    # adjust if you want more frequent captures.
+    - cron: '0 7 * * *'
+    - cron: '0 19 * * *'
+  workflow_dispatch:        # lets you run it manually from the Actions tab
+
+permissions:
+  contents: write           # allow the action to commit snapshots back
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run capture
+        run: node scripts/capture.mjs
+
+      - name: Commit snapshots
+        run: |
+          git config user.name  "quiet-desk-bot"
+          git config user.email "actions@github.com"
+          git add data/
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Capture $(date -u +%Y-%m-%d' '%H:%M) UTC"
+            git push
+          fi
