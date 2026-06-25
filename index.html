@@ -5,105 +5,149 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Quiet Desk — Daily Brief</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Oswald:wght@400;500;600;700&display=swap');
   :root{
-    --paper:#f3efe6;--paper-deep:#e9e3d6;--ink:#1c1a14;--ink-soft:#46402f;
-    --rule:#c4baa4;--accent:#2f4a3b;--accent-warm:#a8551f;--max:760px;color-scheme:light;
+    --news:#f6f2e9;      /* newsprint */
+    --news-deep:#ece6d8;
+    --ink:#14110c;       /* near-black ink */
+    --ink-soft:#4a443a;
+    --rule:#1c1810;      /* rules are dark, like real newsprint */
+    --hair:#b9b09c;      /* hairline grey */
+    --accent:#6b1410;    /* oxblood, used sparingly */
+    --max:920px;
+    color-scheme:light;
   }
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
-  body{margin:0;background:var(--paper)!important;color:var(--ink)!important;
-    font-family:'Newsreader',Georgia,serif;font-size:21px;line-height:1.52;-webkit-font-smoothing:antialiased;}
+  body{margin:0;background:var(--news)!important;color:var(--ink)!important;
+    font-family:'Spectral',Georgia,serif;font-size:19px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");}
   @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto;}*{animation:none!important;transition:none!important;}}
-  .wrap{max-width:var(--max);margin:0 auto;padding:0 22px 90px;}
-  header.mast{border-bottom:2px solid var(--ink);padding:40px 0 18px;margin-bottom:6px;}
-  .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);}
-  h1.title{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(40px,9vw,72px);
-    line-height:.96;margin:.18em 0 .12em;letter-spacing:-.01em;}
-  .dateline{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;
-    font-size:14px;color:var(--ink-soft);font-style:italic;}
-  .dateline .pace{font-style:normal;letter-spacing:.04em;}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 26px 90px;}
 
-  .days{display:flex;gap:7px;overflow-x:auto;padding:14px 0 4px;margin-bottom:2px;
-    -webkit-overflow-scrolling:touch;scrollbar-width:thin;}
-  .day{flex:0 0 auto;cursor:pointer;border:1px solid var(--rule);background:var(--paper-deep);
-    border-radius:3px;padding:8px 12px;text-align:center;min-width:62px;
-    font-family:'Newsreader',serif;color:var(--ink-soft);line-height:1.2;}
-  .day .dow{display:block;font-size:13px;letter-spacing:.04em;text-transform:uppercase;}
-  .day .dnum{display:block;font-size:18px;color:var(--ink);font-weight:500;}
-  .day.sel{background:var(--accent);border-color:var(--accent);}
-  .day.sel .dow,.day.sel .dnum{color:var(--paper);}
-  .day.empty-day{opacity:.45;cursor:default;}
-  .day .dot{display:block;width:5px;height:5px;border-radius:50%;background:var(--accent-warm);margin:3px auto 0;}
-  .day.sel .dot{background:var(--paper);}
+  /* ---- nameplate ---- */
+  header.mast{padding:26px 0 0;border-bottom:3px double var(--rule);margin-bottom:0;}
+  .topline{display:flex;justify-content:space-between;font-family:'Oswald',sans-serif;
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);
+    padding-bottom:8px;border-bottom:1px solid var(--rule);}
+  h1.title{font-family:'Playfair Display',serif;font-weight:900;text-align:center;
+    font-size:clamp(46px,12vw,104px);line-height:.92;letter-spacing:-.01em;
+    margin:.14em 0 .1em;}
+  .sub-rule{display:flex;align-items:center;gap:14px;border-top:1px solid var(--rule);
+    border-bottom:3px double var(--rule);padding:7px 0;
+    font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-soft);justify-content:center;text-align:center;flex-wrap:wrap;}
+  .sub-rule .star{border:none;background:none;}
 
+  /* ---- edition / day selector ---- */
+  .days{display:flex;gap:0;overflow-x:auto;padding:0;margin:0 0 2px;
+    border-bottom:1px solid var(--rule);-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+  .day{flex:0 0 auto;cursor:pointer;border:none;border-right:1px solid var(--hair);background:none;
+    padding:9px 14px;text-align:center;min-width:58px;
+    font-family:'Oswald',sans-serif;color:var(--ink-soft);line-height:1.15;}
+  .day .dow{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;}
+  .day .dnum{display:block;font-size:17px;color:var(--ink);font-weight:600;font-family:'Playfair Display',serif;}
+  .day.sel{background:var(--ink);}
+  .day.sel .dow,.day.sel .dnum{color:var(--news);}
+  .day.empty-day{opacity:.4;cursor:default;}
+  .day .dot{display:block;width:4px;height:4px;border-radius:50%;background:var(--accent);margin:2px auto 0;}
+  .day.sel .dot{background:var(--news);}
+
+  /* ---- controls (kept understated, like a utility bar) ---- */
   .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;
-    padding:14px 0 6px;border-bottom:1px solid var(--rule);margin-bottom:30px;}
-  .controls input[type=search]{flex:1 1 200px;min-width:160px;background:#fff;border:1px solid var(--rule);
-    color:var(--ink);font-family:inherit;font-size:17px;padding:11px 13px;border-radius:2px;}
-  .controls input::placeholder{color:var(--ink-soft);}
-  button{font-family:'Newsreader',serif;font-size:16px;cursor:pointer;background:var(--accent);
-    color:var(--paper);border:none;padding:11px 18px;border-radius:2px;letter-spacing:.02em;}
-  button.ghost{background:none;color:var(--accent);border:1px solid var(--accent);}
-  button.ghost[aria-pressed="true"]{background:var(--accent);color:var(--paper);}
-  button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent-warm);outline-offset:2px;}
-  .status{font-size:15px;color:var(--ink-soft);font-style:italic;min-height:1.2em;padding:2px 0;}
+    padding:12px 0;border-bottom:1px solid var(--rule);margin-bottom:6px;}
+  .controls input[type=search]{flex:1 1 180px;min-width:150px;background:#fffdf7;border:1px solid var(--hair);
+    color:var(--ink);font-family:'Spectral',serif;font-size:15px;padding:9px 12px;border-radius:0;}
+  .controls input::placeholder{color:var(--ink-soft);font-style:italic;}
+  button{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    cursor:pointer;background:var(--ink);color:var(--news);border:none;padding:10px 15px;border-radius:0;}
+  button.ghost{background:none;color:var(--ink);border:1px solid var(--ink);}
+  button.ghost[aria-pressed="true"]{background:var(--ink);color:var(--news);}
+  button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .status{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-soft);min-height:1.1em;padding:8px 0 2px;}
 
-  section.cat{margin:0 0 8px;border-top:1px solid var(--rule);}
-  section.cat:first-of-type{border-top:none;}
-  .cat-head{display:flex;align-items:baseline;gap:14px;padding:26px 0 6px;}
-  .cat-num{font-family:'Fraunces',serif;font-size:15px;color:var(--accent);font-weight:500;font-variant-numeric:tabular-nums;}
-  .cat-name{font-family:'Fraunces',serif;font-weight:600;font-size:26px;letter-spacing:-.01em;}
-  .cat-look{font-size:14px;color:var(--ink-soft);font-style:italic;margin-left:auto;text-align:right;}
+  /* ---- section dividers: centered, rule-flanked, like a real paper ---- */
+  section.cat{margin:0;}
+  .cat-head{display:flex;align-items:center;gap:16px;padding:30px 0 4px;}
+  .cat-head::before,.cat-head::after{content:"";flex:1;height:0;border-top:1px solid var(--rule);}
+  .cat-name{font-family:'Playfair Display',serif;font-weight:700;font-size:23px;letter-spacing:.02em;
+    text-transform:uppercase;white-space:nowrap;}
+  .cat-num,.cat-look{display:none;}              /* drop the numbering + tagline for authenticity */
+  .cat-rule{border-bottom:2px solid var(--rule);margin-bottom:4px;}
 
-  article{padding:16px 0 18px;border-bottom:1px solid var(--rule);display:flex;gap:12px;align-items:flex-start;}
-  article:last-child{border-bottom:none;}
+  /* ---- articles in columns ---- */
+  .cat-body{column-gap:34px;}
+  @media(min-width:680px){ .cat-body{column-count:2;} }
+  article{padding:15px 0 16px;border-bottom:1px solid var(--hair);
+    break-inside:avoid;-webkit-column-break-inside:avoid;display:flex;gap:10px;align-items:flex-start;}
   article .body{flex:1;min-width:0;}
-  article h3{margin:0 0 6px;font-size:22px;font-weight:500;line-height:1.3;}
-  article h3 a{color:var(--ink);text-decoration:none;background-image:linear-gradient(var(--rule),var(--rule));
-    background-size:100% 1px;background-repeat:no-repeat;background-position:0 1.15em;}
-  article h3 a:hover{color:var(--accent);}
-  .meta{font-size:14px;color:var(--ink-soft);letter-spacing:.02em;margin-bottom:7px;}
-  .meta .src{font-style:italic;}
-  .blurb{font-size:18px;color:var(--ink-soft);line-height:1.5;margin:0;}
-  .empty{font-size:16px;color:var(--ink-soft);font-style:italic;padding:6px 0 14px;}
+  .meta{font-family:'Oswald',sans-serif;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-soft);margin-bottom:5px;}
+  .meta .src{color:var(--accent);font-weight:600;}
+  article h3{margin:0 0 6px;font-family:'Playfair Display',serif;font-weight:700;
+    font-size:21px;line-height:1.16;}
+  article h3 a{color:var(--ink);text-decoration:none;}
+  article h3 a:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
+  .blurb{font-size:16px;color:var(--ink);line-height:1.46;margin:0;text-align:justify;hyphens:auto;}
 
-  .star{flex:0 0 auto;background:none;border:none;cursor:pointer;padding:2px 4px;margin:0;
-    font-size:22px;line-height:1;color:var(--rule);transition:color .15s,transform .15s;}
-  .star:hover{color:var(--accent-warm);transform:scale(1.12);}
-  .star.on{color:var(--accent-warm);}
-  #favbtn .badge{display:inline-block;min-width:18px;margin-left:6px;padding:0 5px;border-radius:9px;
-    background:var(--accent-warm);color:var(--paper);font-size:12px;line-height:18px;text-align:center;vertical-align:1px;}
-  .fav-note{font-size:15px;color:var(--ink-soft);font-style:italic;padding:10px 0 20px;}
+  /* lead story: first article of the first populated section spans full width with a drop cap */
+  .lead{column-span:all;border-bottom:2px solid var(--rule);padding-bottom:20px;margin-bottom:8px;}
+  .lead h3{font-size:clamp(28px,5vw,40px);line-height:1.04;margin-bottom:10px;}
+  .lead .blurb{font-size:18px;}
+  .lead .blurb::first-letter{font-family:'Playfair Display',serif;font-weight:900;
+    float:left;font-size:64px;line-height:.78;padding:6px 10px 0 0;color:var(--accent);}
 
-  footer{margin-top:50px;padding-top:18px;border-top:2px solid var(--ink);
-    font-size:13px;color:var(--ink-soft);line-height:1.6;}
-  .spin{display:inline-block;width:11px;height:11px;border:2px solid var(--rule);
-    border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px;margin-right:6px;}
+  .empty{font-family:'Spectral',serif;font-style:italic;font-size:15px;color:var(--ink-soft);padding:6px 0 14px;}
+
+  .star{flex:0 0 auto;background:none;border:none;cursor:pointer;padding:0 2px;margin:2px 0 0;
+    font-size:18px;line-height:1;color:var(--hair);transition:color .15s,transform .15s;}
+  .star:hover{color:var(--accent);transform:scale(1.15);}
+  .star.on{color:var(--accent);}
+  #favcount{display:inline-block;min-width:16px;margin-left:6px;padding:0 5px;
+    background:var(--accent);color:var(--news);font-size:11px;line-height:16px;text-align:center;}
+  .fav-note{font-family:'Spectral',serif;font-style:italic;font-size:16px;color:var(--ink-soft);
+    padding:14px 0 22px;max-width:46ch;}
+
+  footer{margin-top:46px;padding-top:14px;border-top:3px double var(--rule);
+    font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-soft);line-height:1.7;text-align:center;}
+  .spin{display:inline-block;width:10px;height:10px;border:2px solid var(--hair);
+    border-top-color:var(--ink);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px;margin-right:6px;}
   @keyframes sp{to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="mast">
-    <div class="eyebrow">A calm, observational daily brief</div>
+    <div class="topline">
+      <span>No. <span id="issue">—</span></span>
+      <span>Daily Edition</span>
+      <span>Price: Free</span>
+    </div>
     <h1 class="title">The Quiet Desk</h1>
-    <div class="dateline"><span id="dateline">—</span><span class="pace" id="count"></span></div>
+    <div class="sub-rule">
+      <span id="dateline">—</span>
+      <span>·</span>
+      <span id="count">All the day's quiet news</span>
+    </div>
   </header>
 
-  <div class="days" id="days" role="tablist" aria-label="Days"></div>
+  <div class="days" id="days" role="tablist" aria-label="Select edition by day"></div>
 
   <div class="controls">
-    <input type="search" id="filter" placeholder="Filter headlines by keyword…" aria-label="Filter headlines by keyword">
+    <input type="search" id="filter" placeholder="Search the edition…" aria-label="Filter headlines by keyword">
     <button class="ghost" id="onlyfilter" aria-pressed="false">Hide non-matches</button>
-    <button class="ghost" id="favbtn" aria-pressed="false">★ Favorites<span class="badge" id="favcount" hidden>0</span></button>
+    <button class="ghost" id="favbtn" aria-pressed="false">★ Clippings<span id="favcount" hidden>0</span></button>
   </div>
   <div class="status" id="status"></div>
 
   <main id="feed"></main>
 
   <footer>
-    A calm daily reading of the world, captured automatically each day from public RSS feeds. Each day shows only what is new since earlier days. Headlines link to their sources. Favorites are saved in this browser.
+    The Quiet Desk · Assembled automatically each day from public wire and journal feeds<br>
+    Each edition prints only what is new · Clippings are kept in this browser
   </footer>
 </div>
 
@@ -185,7 +229,7 @@ function buildTabs(){
 async function selectDay(k){
   SELECTED=k;
   $("#favbtn").setAttribute("aria-pressed","false");
-  $("#favbtn").firstChild.textContent="★ Favorites";
+  $("#favbtn").firstChild.textContent="★ Clippings";
   buildTabs();
   const sel=$("#days .day.sel"); if(sel) sel.scrollIntoView({inline:'center',block:'nearest'});
   setDateline(keyToDate(k));
@@ -193,12 +237,13 @@ async function selectDay(k){
   render();
 }
 
-function articleNode(i,q){
+function articleNode(i,q,isLead){
   const dimNon=(q && !i.title.toLowerCase().includes(q));
   const art=document.createElement("article"); if(dimNon) art.style.opacity=".4";
+  if(isLead) art.classList.add("lead");
   const star=document.createElement("button");
   const setStar=()=>{ const on=isFav(i); star.className="star "+(on?"on":""); star.textContent=on?"★":"☆";
-    star.setAttribute("aria-pressed",String(on)); star.setAttribute("aria-label",on?"Remove from favorites":"Add to favorites"); };
+    star.setAttribute("aria-pressed",String(on)); star.setAttribute("aria-label",on?"Remove clipping":"Save clipping"); };
   setStar();
   star.addEventListener("click",()=>{ toggleFav(i); setStar();
     if($("#favbtn").getAttribute("aria-pressed")==="true" && !isFav(i)) art.remove(); });
@@ -213,10 +258,21 @@ function renderFavorites(){
   feedEl.innerHTML="";
   const favs=Object.values(FAVS).sort((a,b)=>b.saved-a.saved);
   const sec=document.createElement("section"); sec.className="cat";
-  sec.innerHTML=`<div class="cat-head"><span class="cat-num">★</span><span class="cat-name">Favorites</span><span class="cat-look">saved on this device</span></div>`;
-  if(!favs.length) sec.innerHTML+=`<p class="fav-note">No favorites yet. Tap the star beside any headline to keep it here.</p>`;
-  else favs.forEach(i=>sec.appendChild(articleNode(i,"")));
+  const head=document.createElement("div"); head.className="cat-head";
+  head.innerHTML=`<span class="cat-name">Clippings</span>`;
+  sec.appendChild(head);
+  const ruleDiv=document.createElement("div"); ruleDiv.className="cat-rule"; sec.appendChild(ruleDiv);
+  if(!favs.length){
+    const p=document.createElement("p"); p.className="fav-note";
+    p.textContent="No clippings yet. Tap the star beside any report to save it here.";
+    sec.appendChild(p);
+  } else {
+    const colWrap=document.createElement("div"); colWrap.className="cat-body";
+    favs.forEach(i=>colWrap.appendChild(articleNode(i,"")));
+    sec.appendChild(colWrap);
+  }
   feedEl.appendChild(sec);
+  $("#count").textContent=favs.length+" clipping"+(favs.length===1?"":"s");
 }
 
 function render(){
@@ -225,18 +281,36 @@ function render(){
   const hideNon=$("#onlyfilter").getAttribute("aria-pressed")==="true";
   feedEl.innerHTML="";
   const day=SELECTED && CACHE[SELECTED];
-  if(!day){ feedEl.innerHTML=`<p class="fav-note">Nothing captured for this day.</p>`; $("#count").textContent=""; return; }
+  if(!day){ feedEl.innerHTML=`<p class="fav-note">No edition was printed for this day.</p>`; $("#count").textContent="No edition"; return; }
   const total=day.cats.reduce((s,c)=>s+c.items.length,0);
-  $("#count").textContent=total+" new · "+(isToday(SELECTED)?"today":keyToDate(SELECTED).toLocaleDateString());
-  day.cats.forEach((block,idx)=>{
+  $("#count").textContent=total+" report"+(total===1?"":"s")+" · "+(isToday(SELECTED)?"today's edition":keyToDate(SELECTED).toLocaleDateString());
+
+  let leadAssigned=false;
+  day.cats.forEach((block)=>{
     const matches=block.items.filter(i=>!q||i.title.toLowerCase().includes(q));
     const show=hideNon?matches:block.items;
     if(hideNon && matches.length===0) return;
     const sec=document.createElement("section"); sec.className="cat";
-    sec.innerHTML=`<div class="cat-head"><span class="cat-num">${String(idx+1).padStart(2,'0')}</span>
-      <span class="cat-name">${block.name}</span><span class="cat-look">${block.look}</span></div>`;
-    if(show.length===0) sec.innerHTML+=`<p class="empty">Nothing new in this section ${isToday(SELECTED)?"today":"that day"}.</p>`;
-    show.forEach(i=>sec.appendChild(articleNode(i,q)));
+    const head=document.createElement("div"); head.className="cat-head";
+    head.innerHTML=`<span class="cat-name">${block.name}</span>`;
+    sec.appendChild(head);
+    const ruleDiv=document.createElement("div"); ruleDiv.className="cat-rule"; sec.appendChild(ruleDiv);
+
+    if(show.length===0){
+      const e=document.createElement("p"); e.className="empty";
+      e.textContent=`No fresh reports in this section ${isToday(SELECTED)?"today":"that day"}.`;
+      sec.appendChild(e);
+    } else {
+      let items=show.slice();
+      // first article of the first populated section becomes the lead (full width, drop cap)
+      if(!leadAssigned){
+        const lead=articleNode(items.shift(),q,true);
+        sec.appendChild(lead); leadAssigned=true;
+      }
+      const colWrap=document.createElement("div"); colWrap.className="cat-body";
+      items.forEach(i=>colWrap.appendChild(articleNode(i,q)));
+      sec.appendChild(colWrap);
+    }
     feedEl.appendChild(sec);
   });
 }
@@ -245,10 +319,12 @@ $("#filter").addEventListener("input",render);
 $("#onlyfilter").addEventListener("click",e=>{ const b=e.currentTarget,on=b.getAttribute("aria-pressed")==="true";
   b.setAttribute("aria-pressed",String(!on)); b.textContent=on?"Hide non-matches":"Show all again"; render(); });
 $("#favbtn").addEventListener("click",e=>{ const b=e.currentTarget,on=b.getAttribute("aria-pressed")==="true";
-  b.setAttribute("aria-pressed",String(!on)); b.firstChild.textContent=on?"★ Favorites":"★ Showing favorites"; render(); });
+  b.setAttribute("aria-pressed",String(!on)); b.firstChild.textContent=on?"★ Clippings":"★ Reading clippings"; render(); });
 
 updateFavCount();
 setDateline(new Date());
+// issue number: days since launch-ish, purely cosmetic
+$("#issue").textContent = String(1000 + Math.floor((Date.now()-Date.UTC(2026,0,1))/864e5));
 loadIndex();
 </script>
 </body>
