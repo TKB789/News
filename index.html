@@ -338,14 +338,21 @@ function renderMenu(day,q){
   intro.textContent="Choose a section to read.";
   feedEl.appendChild(intro);
   const list=document.createElement("div"); list.className="menu-list";
+  let listed=0;
   day.cats.forEach((block,idx)=>{
     const n=block.items.length;
+    if(n===0) return;                 // hide sections with no reports
+    listed++;
     const b=document.createElement("button"); b.className="menu-item";
     b.innerHTML=`<span class="mi-name">${block.name}</span><span class="mi-count">${n} report${n===1?"":"s"}</span><span class="mi-arrow">›</span>`;
-    if(n===0) b.disabled=true;
-    else b.addEventListener("click",()=>{ VIEW=idx; render(); window.scrollTo({top:0,behavior:'instant'}); });
+    b.addEventListener("click",()=>{ VIEW=idx; render(); window.scrollTo({top:0,behavior:'instant'}); });
     list.appendChild(b);
   });
+  if(listed===0){
+    const p=document.createElement("p"); p.className="fav-note";
+    p.textContent="No new reports in this edition.";
+    list.appendChild(p);
+  }
   feedEl.appendChild(list);
   const total=day.cats.reduce((s,c)=>s+c.items.length,0);
   $("#count").textContent = total+" report"+(total===1?"":"s")+" · "+(isToday(SELECTED)?"today's edition":keyToDate(SELECTED).toLocaleDateString());
@@ -354,10 +361,12 @@ function renderMenu(day,q){
 function renderSection(day){
   const idx=VIEW;
   const block=day.cats[idx];
+  const populated=day.cats.filter(c=>c.items.length>0);
+  const posAmong=populated.indexOf(block)+1;
   $("#secnav").hidden=false;
-  $("#secpos").textContent=`${block.name} · ${idx+1} of ${day.cats.length}`;
-  $("#secprev").disabled = idx<=0;
-  $("#secnext").disabled = idx>=day.cats.length-1;
+  $("#secpos").textContent=`${block.name} · ${posAmong} of ${populated.length}`;
+  $("#secprev").disabled = nextPopulated(idx,-1) < 0;
+  $("#secnext").disabled = nextPopulated(idx,1) < 0;
   feedEl.innerHTML="";
   feedEl.appendChild(sectionBlock(block,"",true).sec);
   $("#count").textContent = isToday(SELECTED)?"today's edition":keyToDate(SELECTED).toLocaleDateString();
@@ -387,10 +396,15 @@ function render(){
   renderSection(day);
 }
 
-/* section nav */
+/* section nav — skip sections that have no reports */
+function nextPopulated(from,dir){
+  const day=CACHE[SELECTED]; if(!day) return -1;
+  for(let i=from+dir; i>=0 && i<day.cats.length; i+=dir){ if(day.cats[i].items.length>0) return i; }
+  return -1;
+}
 $("#secmenu").addEventListener("click",()=>{ VIEW='menu'; render(); window.scrollTo({top:0,behavior:'instant'}); });
-$("#secprev").addEventListener("click",()=>{ if(typeof VIEW==='number' && VIEW>0){ VIEW--; render(); window.scrollTo({top:0,behavior:'instant'}); } });
-$("#secnext").addEventListener("click",()=>{ const day=CACHE[SELECTED]; if(typeof VIEW==='number' && day && VIEW<day.cats.length-1){ VIEW++; render(); window.scrollTo({top:0,behavior:'instant'}); } });
+$("#secprev").addEventListener("click",()=>{ const p=nextPopulated(VIEW,-1); if(p>=0){ VIEW=p; render(); window.scrollTo({top:0,behavior:'instant'}); } });
+$("#secnext").addEventListener("click",()=>{ const p=nextPopulated(VIEW,1); if(p>=0){ VIEW=p; render(); window.scrollTo({top:0,behavior:'instant'}); } });
 
 $("#filter").addEventListener("input",render);
 $("#favbtn").addEventListener("click",e=>{ const b=e.currentTarget,on=b.getAttribute("aria-pressed")==="true";
