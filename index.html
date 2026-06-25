@@ -110,6 +110,31 @@
   .fav-note{font-family:'Spectral',serif;font-style:italic;font-size:16px;color:var(--ink-soft);
     padding:14px 0 22px;max-width:46ch;}
 
+  /* ---- section nav bar ---- */
+  .secnav{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:10px 0;border-bottom:1px solid var(--rule);margin-bottom:6px;}
+  .secnav-btn,.secnav-arrow{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.08em;
+    text-transform:uppercase;cursor:pointer;background:none;color:var(--ink);
+    border:1px solid var(--ink);padding:8px 13px;border-radius:0;}
+  .secnav-arrow[disabled]{opacity:.3;cursor:default;}
+  .secnav-pos{flex:1;text-align:center;font-family:'Oswald',sans-serif;font-size:11px;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);}
+
+  /* ---- front-page section menu ---- */
+  .menu-intro{font-family:'Spectral',serif;font-style:italic;font-size:16px;color:var(--ink-soft);
+    padding:18px 0 4px;text-align:center;}
+  .menu-list{border-top:3px double var(--rule);margin-top:10px;}
+  .menu-item{display:flex;align-items:baseline;gap:14px;width:100%;text-align:left;
+    background:none;border:none;border-bottom:1px solid var(--hair);cursor:pointer;
+    padding:18px 4px;color:var(--ink);}
+  .menu-item:hover{background:var(--news-deep);}
+  .menu-item .mi-name{font-family:'Playfair Display',serif;font-weight:700;font-size:24px;flex:1;}
+  .menu-item .mi-count{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--accent);white-space:nowrap;}
+  .menu-item .mi-arrow{font-size:20px;color:var(--ink-soft);}
+  .menu-item[disabled]{opacity:.4;cursor:default;}
+  .menu-item[disabled]:hover{background:none;}
+
   footer{margin-top:46px;padding-top:14px;border-top:3px double var(--rule);
     font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
     color:var(--ink-soft);line-height:1.7;text-align:center;}
@@ -138,10 +163,16 @@
 
   <div class="controls">
     <input type="search" id="filter" placeholder="Search the edition…" aria-label="Filter headlines by keyword">
-    <button class="ghost" id="onlyfilter" aria-pressed="false">Hide non-matches</button>
     <button class="ghost" id="favbtn" aria-pressed="false">★ Clippings<span id="favcount" hidden>0</span></button>
   </div>
   <div class="status" id="status"></div>
+
+  <nav class="secnav" id="secnav" hidden aria-label="Section navigation">
+    <button id="secmenu" class="secnav-btn">‹ Sections</button>
+    <button id="secprev" class="secnav-arrow" aria-label="Previous section">‹ Prev</button>
+    <span id="secpos" class="secnav-pos"></span>
+    <button id="secnext" class="secnav-arrow" aria-label="Next section">Next ›</button>
+  </nav>
 
   <main id="feed"></main>
 
@@ -161,6 +192,7 @@ const DATA='data/';
 let INDEX=[];          // array of date keys, oldest→newest
 let CACHE={};          // dateKey -> snapshot json
 let SELECTED=null;
+let VIEW='menu';       // 'menu' | section index (number) | 'clippings'
 
 /* favorites */
 const FAV_KEY='quietdesk_favs';
@@ -228,6 +260,7 @@ function buildTabs(){
 
 async function selectDay(k){
   SELECTED=k;
+  VIEW='menu';
   $("#favbtn").setAttribute("aria-pressed","false");
   $("#favbtn").firstChild.textContent="★ Clippings";
   buildTabs();
@@ -275,51 +308,95 @@ function renderFavorites(){
   $("#count").textContent=favs.length+" clipping"+(favs.length===1?"":"s");
 }
 
-function render(){
-  if($("#favbtn").getAttribute("aria-pressed")==="true"){ renderFavorites(); return; }
-  const q=$("#filter").value.trim().toLowerCase();
-  const hideNon=$("#onlyfilter").getAttribute("aria-pressed")==="true";
-  feedEl.innerHTML="";
-  const day=SELECTED && CACHE[SELECTED];
-  if(!day){ feedEl.innerHTML=`<p class="fav-note">No edition was printed for this day.</p>`; $("#count").textContent="No edition"; return; }
-  const total=day.cats.reduce((s,c)=>s+c.items.length,0);
-  $("#count").textContent=total+" report"+(total===1?"":"s")+" · "+(isToday(SELECTED)?"today's edition":keyToDate(SELECTED).toLocaleDateString());
-
-  let leadAssigned=false;
-  day.cats.forEach((block)=>{
-    const matches=block.items.filter(i=>!q||i.title.toLowerCase().includes(q));
-    const show=hideNon?matches:block.items;
-    if(hideNon && matches.length===0) return;
-    const sec=document.createElement("section"); sec.className="cat";
-    const head=document.createElement("div"); head.className="cat-head";
-    head.innerHTML=`<span class="cat-name">${block.name}</span>`;
-    sec.appendChild(head);
-    const ruleDiv=document.createElement("div"); ruleDiv.className="cat-rule"; sec.appendChild(ruleDiv);
-
-    if(show.length===0){
-      const e=document.createElement("p"); e.className="empty";
-      e.textContent=`No fresh reports in this section ${isToday(SELECTED)?"today":"that day"}.`;
-      sec.appendChild(e);
-    } else {
-      let items=show.slice();
-      // first article of the first populated section becomes the lead (full width, drop cap)
-      if(!leadAssigned){
-        const lead=articleNode(items.shift(),q,true);
-        sec.appendChild(lead); leadAssigned=true;
-      }
-      const colWrap=document.createElement("div"); colWrap.className="cat-body";
-      items.forEach(i=>colWrap.appendChild(articleNode(i,q)));
-      sec.appendChild(colWrap);
-    }
-    feedEl.appendChild(sec);
-  });
+function sectionBlock(block,q,withLead){
+  const sec=document.createElement("section"); sec.className="cat";
+  const head=document.createElement("div"); head.className="cat-head";
+  head.innerHTML=`<span class="cat-name">${block.name}</span>`;
+  sec.appendChild(head);
+  const ruleDiv=document.createElement("div"); ruleDiv.className="cat-rule"; sec.appendChild(ruleDiv);
+  const items = q ? block.items.filter(i=>i.title.toLowerCase().includes(q)||(i.blurb||"").toLowerCase().includes(q)) : block.items.slice();
+  if(items.length===0){
+    const e=document.createElement("p"); e.className="empty";
+    e.textContent = q ? `No reports here mention “${q}”.` : `No fresh reports in this section ${isToday(SELECTED)?"today":"that day"}.`;
+    sec.appendChild(e);
+    return {sec, count:0};
+  }
+  if(withLead){
+    const lead=articleNode(items.shift(),q,true);
+    sec.appendChild(lead);
+  }
+  const colWrap=document.createElement("div"); colWrap.className="cat-body";
+  items.forEach(i=>colWrap.appendChild(articleNode(i,q)));
+  sec.appendChild(colWrap);
+  return {sec, count:1};
 }
 
+function renderMenu(day,q){
+  $("#secnav").hidden=true;
+  feedEl.innerHTML="";
+  const intro=document.createElement("p"); intro.className="menu-intro";
+  intro.textContent="Choose a section to read.";
+  feedEl.appendChild(intro);
+  const list=document.createElement("div"); list.className="menu-list";
+  day.cats.forEach((block,idx)=>{
+    const n=block.items.length;
+    const b=document.createElement("button"); b.className="menu-item";
+    b.innerHTML=`<span class="mi-name">${block.name}</span><span class="mi-count">${n} report${n===1?"":"s"}</span><span class="mi-arrow">›</span>`;
+    if(n===0) b.disabled=true;
+    else b.addEventListener("click",()=>{ VIEW=idx; render(); window.scrollTo({top:0,behavior:'instant'}); });
+    list.appendChild(b);
+  });
+  feedEl.appendChild(list);
+  const total=day.cats.reduce((s,c)=>s+c.items.length,0);
+  $("#count").textContent = total+" report"+(total===1?"":"s")+" · "+(isToday(SELECTED)?"today's edition":keyToDate(SELECTED).toLocaleDateString());
+}
+
+function renderSection(day){
+  const idx=VIEW;
+  const block=day.cats[idx];
+  $("#secnav").hidden=false;
+  $("#secpos").textContent=`${block.name} · ${idx+1} of ${day.cats.length}`;
+  $("#secprev").disabled = idx<=0;
+  $("#secnext").disabled = idx>=day.cats.length-1;
+  feedEl.innerHTML="";
+  feedEl.appendChild(sectionBlock(block,"",true).sec);
+  $("#count").textContent = isToday(SELECTED)?"today's edition":keyToDate(SELECTED).toLocaleDateString();
+}
+
+function renderSearch(day,q){
+  $("#secnav").hidden=true;
+  feedEl.innerHTML="";
+  let shown=0;
+  day.cats.forEach(block=>{
+    const matches=block.items.filter(i=>i.title.toLowerCase().includes(q)||(i.blurb||"").toLowerCase().includes(q));
+    if(matches.length===0) return;
+    shown+=matches.length;
+    feedEl.appendChild(sectionBlock(block,q,false).sec);
+  });
+  $("#count").textContent=`Searching “${q}”`;
+  if(shown===0) feedEl.innerHTML=`<p class="fav-note">No reports in this edition mention “${q}”. Try another word, or check a different day.</p>`;
+}
+
+function render(){
+  if($("#favbtn").getAttribute("aria-pressed")==="true"){ $("#secnav").hidden=true; renderFavorites(); return; }
+  const q=$("#filter").value.trim().toLowerCase();
+  const day=SELECTED && CACHE[SELECTED];
+  if(!day){ $("#secnav").hidden=true; feedEl.innerHTML=`<p class="fav-note">No edition was printed for this day.</p>`; $("#count").textContent="No edition"; return; }
+  if(q){ renderSearch(day,q); return; }          // search is global, overrides section view
+  if(VIEW==='menu' || typeof VIEW!=='number' || VIEW>=day.cats.length){ renderMenu(day,q); return; }
+  renderSection(day);
+}
+
+/* section nav */
+$("#secmenu").addEventListener("click",()=>{ VIEW='menu'; render(); window.scrollTo({top:0,behavior:'instant'}); });
+$("#secprev").addEventListener("click",()=>{ if(typeof VIEW==='number' && VIEW>0){ VIEW--; render(); window.scrollTo({top:0,behavior:'instant'}); } });
+$("#secnext").addEventListener("click",()=>{ const day=CACHE[SELECTED]; if(typeof VIEW==='number' && day && VIEW<day.cats.length-1){ VIEW++; render(); window.scrollTo({top:0,behavior:'instant'}); } });
+
 $("#filter").addEventListener("input",render);
-$("#onlyfilter").addEventListener("click",e=>{ const b=e.currentTarget,on=b.getAttribute("aria-pressed")==="true";
-  b.setAttribute("aria-pressed",String(!on)); b.textContent=on?"Hide non-matches":"Show all again"; render(); });
 $("#favbtn").addEventListener("click",e=>{ const b=e.currentTarget,on=b.getAttribute("aria-pressed")==="true";
-  b.setAttribute("aria-pressed",String(!on)); b.firstChild.textContent=on?"★ Clippings":"★ Reading clippings"; render(); });
+  b.setAttribute("aria-pressed",String(!on)); b.firstChild.textContent=on?"★ Clippings":"★ Reading clippings";
+  if(on) VIEW='menu';   // leaving clippings → back to section menu
+  render(); window.scrollTo({top:0,behavior:'instant'}); });
 
 updateFavCount();
 setDateline(new Date());
