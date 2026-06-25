@@ -147,6 +147,15 @@
   .pager-num.cur{background:var(--ink);color:var(--news);border-color:var(--ink);font-weight:700;}
   .pager-ell{font-family:'Playfair Display',serif;color:var(--ink-soft);padding:0 2px;}
 
+  /* ---- floating scroll buttons ---- */
+  .scroll-btns{position:fixed;right:16px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:50;}
+  .scroll-btn{width:46px;height:46px;border-radius:50%;border:1px solid var(--news);
+    background:var(--ink);color:var(--news);font-size:20px;line-height:1;cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;padding:0;
+    font-family:'Spectral',serif;}
+  .scroll-btn:active{transform:scale(.94);}
+  @media (prefers-reduced-motion:reduce){.scroll-btn:active{transform:none;}}
+
   footer{margin-top:46px;padding-top:14px;border-top:3px double var(--rule);
     font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
     color:var(--ink-soft);line-height:1.7;text-align:center;}
@@ -187,6 +196,11 @@
   </nav>
 
   <main id="feed"></main>
+
+  <div class="scroll-btns" id="scrollbtns" hidden>
+    <button id="scrolltop" class="scroll-btn" aria-label="Jump to top">↑</button>
+    <button id="scrollbot" class="scroll-btn" aria-label="Jump to bottom">↓</button>
+  </div>
 
   <footer>
     The Quiet Desk · Assembled automatically each day from public wire and journal feeds<br>
@@ -455,7 +469,8 @@ function renderSearch(day,q){
   if(shown===0) feedEl.innerHTML=`<p class="fav-note">No reports in this edition mention “${q}”. Try another word, or check a different day.</p>`;
 }
 
-function render(){
+function render(){ renderInner(); if(typeof updateScrollBtns==='function') updateScrollBtns(); }
+function renderInner(){
   if($("#favbtn").getAttribute("aria-pressed")==="true"){ $("#secnav").hidden=true; renderFavorites(); return; }
   const q=$("#filter").value.trim().toLowerCase();
   const day=SELECTED && CACHE[SELECTED];
@@ -480,6 +495,17 @@ $("#favbtn").addEventListener("click",e=>{ const b=e.currentTarget,on=b.getAttri
   b.setAttribute("aria-pressed",String(!on)); b.firstChild.textContent=on?"★ Clippings":"★ Reading clippings";
   if(on) VIEW='menu';   // leaving clippings → back to section menu
   render(); window.scrollTo({top:0,behavior:'instant'}); });
+
+/* scroll-to-top / scroll-to-bottom buttons */
+const scrollBtns=$("#scrollbtns");
+$("#scrolltop").addEventListener("click",()=>window.scrollTo({top:0,behavior:'smooth'}));
+$("#scrollbot").addEventListener("click",()=>window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'}));
+function updateScrollBtns(){
+  // only show when the page is meaningfully taller than the viewport
+  scrollBtns.hidden = document.body.scrollHeight <= window.innerHeight + 300;
+}
+window.addEventListener("resize",updateScrollBtns);
+window.addEventListener("scroll",updateScrollBtns,{passive:true});
 
 updateFavCount();
 setDateline(new Date());
