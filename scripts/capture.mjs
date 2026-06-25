@@ -4,7 +4,7 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 
 const DAYS_KEPT = 60;     // how many daily snapshots to retain in the repo
-const PER_CAT   = 15;     // max NEW items kept per category per day
+const PER_CAT   = 0;      // max NEW items kept per category per day (0 = no cap, keep all)
 
 // ---- your sources, grouped by category (edit freely) ----
 const CATEGORIES = [
@@ -15,13 +15,16 @@ const CATEGORIES = [
     "https://earthsky.org/feed/",
     "https://skyandtelescope.org/feed/",
     "https://www.universetoday.com/feed/",
-    "https://www.esa.int/rssfeed/TopNews" ]},
+    "https://www.esa.int/rssfeed/TopNews",
+    "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml" ]},
   { name:"Science & Medicine", look:"discoveries that help people", feeds:[
     "https://www.sciencedaily.com/rss/top/science.xml",
     "https://www.sciencedaily.com/rss/health_medicine.xml",
     "https://www.nature.com/nature.rss",
     "https://phys.org/rss-feed/",
-    "https://www.eurekalert.org/rss/breaking.xml" ]},
+    "https://www.eurekalert.org/rss/breaking.xml",
+    "https://www.science.org/rss/news_current.xml",
+    "https://www.newscientist.com/feed/home/" ]},
   { name:"Good Developments", look:"progress, quietly", feeds:[
     "https://www.positive.news/feed/",
     "https://www.goodnewsnetwork.org/feed/",
@@ -30,24 +33,44 @@ const CATEGORIES = [
   { name:"Arts & Culture", look:"human achievement", feeds:[
     "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml",
     "https://www.theguardian.com/culture/rss",
-    "https://www.smithsonianmag.com/rss/arts-culture/" ]},
+    "https://www.smithsonianmag.com/rss/arts-culture/",
+    "https://www.theguardian.com/books/rss",
+    "https://www.npr.org/rss/rss.php?id=1008" ]},
   { name:"Climate & Environment", look:"both sides of the ledger", feeds:[
     "https://www.sciencedaily.com/rss/earth_climate.xml",
     "https://earth.org/feed/",
     "https://www.theguardian.com/environment/rss",
-    "https://grist.org/feed/" ]},
+    "https://grist.org/feed/",
+    "https://insideclimatenews.org/feed/" ]},
   { name:"Global Health", look:"outbreaks & public health", feeds:[
     "https://www.who.int/feeds/entity/mediacentre/news/en/rss.xml",
     "https://www.sciencedaily.com/rss/health_medicine/infectious_diseases.xml",
-    "https://www.statnews.com/feed/" ]},
+    "https://www.statnews.com/feed/",
+    "https://feeds.bbci.co.uk/news/health/rss.xml" ]},
+  { name:"Technology", look:"how the tools are changing", feeds:[
+    "https://www.theverge.com/rss/index.xml",
+    "https://arstechnica.com/feed/",
+    "https://www.wired.com/feed/rss",
+    "https://feeds.bbci.co.uk/news/technology/rss.xml",
+    "https://www.technologyreview.com/feed/" ]},
   { name:"World & Conflict", look:"the harder current events", feeds:[
     "https://feeds.bbci.co.uk/news/world/rss.xml",
     "https://www.aljazeera.com/xml/rss/all.xml",
     "https://www.npr.org/rss/rss.php?id=1004",
-    "https://www.france24.com/en/rss" ]},
+    "https://www.france24.com/en/rss",
+    "https://rss.dw.com/rdf/rss-en-world" ]},
   { name:"Economy & Markets", look:"the money underneath", feeds:[
     "https://feeds.bbci.co.uk/news/business/rss.xml",
-    "https://www.theguardian.com/business/economics/rss" ]},
+    "https://www.theguardian.com/business/economics/rss",
+    "https://feeds.a.dj.com/rss/RSSMarketsMain.xml" ]},
+  { name:"Business & Finance", look:"companies, deals, money", feeds:[
+    "https://feeds.bbci.co.uk/news/business/rss.xml",
+    "https://www.theguardian.com/uk/business/rss",
+    "https://feeds.npr.org/1006/rss.xml" ]},
+  { name:"Sports", look:"results and the human feats", feeds:[
+    "https://feeds.bbci.co.uk/sport/rss.xml",
+    "https://www.espn.com/espn/rss/news",
+    "https://www.theguardian.com/sport/rss" ]},
   { name:"Regional Spotlights", look:"under-covered corners", feeds:[
     "https://www.mercopress.com/rss/",
     "https://www.scmp.com/rss/91/feed",
@@ -159,7 +182,8 @@ async function main(){
       } else fail++;
     }
     items.sort((a,b)=> new Date(b.date||0) - new Date(a.date||0));
-    cats.push({ name:cat.name, look:cat.look, items: items.slice(0,PER_CAT).map(i=>({...i,cat:cat.name})) });
+    const kept = PER_CAT > 0 ? items.slice(0,PER_CAT) : items;
+    cats.push({ name:cat.name, look:cat.look, items: kept.map(i=>({...i,cat:cat.name})) });
   }
 
   writeFileSync(`${DATA_DIR}/${tk}.json`, JSON.stringify({ date:tk, built:Date.now(), cats }, null, 0));
