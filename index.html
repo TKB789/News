@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Quiet Desk — Daily Brief</title>
+<style>
+  /* ---- swap-in fonts: Fraunces (display) + Newsreader (body) via Google Fonts ---- */
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+
+  :root{
+    --paper:#f3efe6;
+    --paper-deep:#e9e3d6;
+    --ink:#1c1a14;
+    --ink-soft:#46402f;
+    --rule:#c4baa4;
+    --accent:#2f4a3b;      /* deep field green */
+    --accent-warm:#a8551f; /* dusk terracotta, used once */
+    --max:760px;
+  }
+  /* keep the paper look even if the phone is in dark mode */
+  :root{color-scheme:light;}
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;background:var(--paper)!important;color:var(--ink)!important;
+    font-family:'Newsreader',Georgia,serif;font-size:21px;line-height:1.52;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto;}*{animation:none!important;transition:none!important;}}
+
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 22px 90px;}
+
+  /* ---- masthead ---- */
+  header.mast{
+    border-bottom:2px solid var(--ink);
+    padding:40px 0 18px;margin-bottom:6px;
+  }
+  .eyebrow{
+    font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--ink-soft);font-family:'Newsreader',serif;
+  }
+  h1.title{
+    font-family:'Fraunces',serif;font-weight:600;font-size:clamp(40px,9vw,72px);
+    line-height:.96;margin:.18em 0 .12em;letter-spacing:-.01em;
+  }
+  .dateline{
+    display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;
+    font-size:14px;color:var(--ink-soft);font-style:italic;
+  }
+  .dateline .pace{font-style:normal;letter-spacing:.04em;}
+
+  /* ---- controls ---- */
+  .controls{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    padding:18px 0 6px;border-bottom:1px solid var(--rule);margin-bottom:30px;
+  }
+  .controls input[type=search]{
+    flex:1 1 200px;min-width:160px;background:#fff;border:1px solid var(--rule);
+    color:var(--ink);font-family:inherit;font-size:17px;padding:11px 13px;border-radius:2px;
+  }
+  .controls input::placeholder{color:var(--ink-soft);}
+  button{
+    font-family:'Newsreader',serif;font-size:16px;cursor:pointer;
+    background:var(--accent);color:var(--paper);border:none;
+    padding:11px 18px;border-radius:2px;letter-spacing:.02em;
+  }
+  button.ghost{background:none;color:var(--accent);border:1px solid var(--accent);}
+  button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent-warm);outline-offset:2px;}
+
+  .status{font-size:15px;color:var(--ink-soft);font-style:italic;min-height:1.2em;padding:2px 0;}
+
+  /* ---- category section ---- */
+  section.cat{margin:0 0 8px;border-top:1px solid var(--rule);}
+  section.cat:first-of-type{border-top:none;}
+  .cat-head{
+    display:flex;align-items:baseline;gap:14px;padding:26px 0 6px;
+  }
+  .cat-num{
+    font-family:'Fraunces',serif;font-size:15px;color:var(--accent);font-weight:500;
+    font-variant-numeric:tabular-nums;
+  }
+  .cat-name{
+    font-family:'Fraunces',serif;font-weight:600;font-size:26px;letter-spacing:-.01em;
+  }
+  .cat-look{font-size:14px;color:var(--ink-soft);font-style:italic;margin-left:auto;text-align:right;}
+
+  /* ---- article ---- */
+  article{padding:16px 0 18px;border-bottom:1px solid var(--rule);}
+  article:last-child{border-bottom:none;}
+  article h3{margin:0 0 6px;font-size:22px;font-weight:500;line-height:1.3;font-family:'Newsreader',serif;}
+  article h3 a{color:var(--ink);text-decoration:none;background-image:linear-gradient(var(--rule),var(--rule));
+    background-size:100% 1px;background-repeat:no-repeat;background-position:0 1.15em;}
+  article h3 a:hover{color:var(--accent);}
+  .meta{font-size:14px;color:var(--ink-soft);letter-spacing:.02em;margin-bottom:7px;}
+  .meta .src{font-style:italic;}
+  .blurb{font-size:18px;color:var(--ink-soft);line-height:1.5;margin:0;}
+  .empty{font-size:16px;color:var(--ink-soft);font-style:italic;padding:6px 0 14px;}
+
+  footer{margin-top:50px;padding-top:18px;border-top:2px solid var(--ink);
+    font-size:13px;color:var(--ink-soft);line-height:1.6;}
+  footer code{background:var(--paper-deep);padding:1px 5px;border-radius:2px;font-size:12px;}
+  footer a{color:var(--accent);}
+
+  .spin{display:inline-block;width:11px;height:11px;border:2px solid var(--rule);
+    border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px;margin-right:6px;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <div class="eyebrow">A calm, observational daily brief</div>
+    <h1 class="title">The Quiet Desk</h1>
+    <div class="dateline">
+      <span id="dateline">—</span>
+      <span class="pace" id="count"></span>
+    </div>
+  </header>
+
+  <div class="controls">
+    <input type="search" id="filter" placeholder="Filter headlines by keyword (e.g. vaccine, eclipse, Sahel)…" aria-label="Filter headlines by keyword">
+    <button id="refresh">Refresh</button>
+    <button class="ghost" id="onlyfilter" aria-pressed="false">Hide non-matches</button>
+  </div>
+  <div class="status" id="status"></div>
+
+  <main id="feed"><!-- sections injected here --></main>
+
+  <footer>
+    <strong>How this works.</strong> This file reads public RSS feeds from your sources and groups them by your brief's categories. It needs no API key and stores nothing.
+    Because a file opened locally can't fetch feeds directly (browser security), it routes them through a free relay: <code id="proxy-label"></code>.
+    If headlines stop loading, the relay is likely rate-limited — wait a minute, or open the file and change the <code>PROXY</code> line near the top of the script to another option listed there.<br><br>
+    <strong>Edit your sources.</strong> Open this file in any text editor and edit the <code>FEEDS</code> list in the script. Each entry is a category and an RSS URL. Add, remove, or reorder freely.
+  </footer>
+</div>
+
+<script>
+/* =========================================================================
+   1) PROXY  — relays RSS so a local file can fetch it (CORS workaround).
+   If feeds stop loading, swap to another option below.
+   ========================================================================= */
+const PROXIES = {
+  allorigins: u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  corsproxy:  u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+  rss2json:   u => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(u)}` // returns JSON, handled below
+};
+const PROXY = 'allorigins';   // <-- change to 'corsproxy' or 'rss2json' if needed
+
+/* =========================================================================
+   2) FEEDS — your sources, grouped into the brief's categories, in priority order.
+   "look" is the one-line note shown at right; purely cosmetic.
+   Edit freely. Any working RSS URL drops in here.
+   ========================================================================= */
+const CATEGORIES = [
+  { name:"Sky & Space",        look:"events you can still catch", feeds:[
+      "https://www.nasa.gov/feed/",
+      "https://www.sciencedaily.com/rss/space_time.xml",
+      "https://www.space.com/feeds/all",
+      "https://earthsky.org/feed/",
+      "https://skyandtelescope.org/feed/",
+      "https://www.universetoday.com/feed/",
+      "https://www.esa.int/rssfeed/TopNews" ]},
+  { name:"Science & Medicine", look:"discoveries that help people", feeds:[
+      "https://www.sciencedaily.com/rss/top/science.xml",
+      "https://www.sciencedaily.com/rss/health_medicine.xml",
+      "https://www.nature.com/nature.rss",
+      "https://phys.org/rss-feed/",
+      "https://www.eurekalert.org/rss/breaking.xml" ]},
+  { name:"Good Developments",  look:"progress, quietly", feeds:[
+      "https://www.positive.news/feed/",
+      "https://www.goodnewsnetwork.org/feed/",
+      "https://reasonstobecheerful.world/feed/",
+      "https://www.yesmagazine.org/feed" ]},
+  { name:"Arts & Culture",     look:"human achievement", feeds:[
+      "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml",
+      "https://www.theguardian.com/culture/rss",
+      "https://www.smithsonianmag.com/rss/arts-culture/" ]},
+  { name:"Climate & Environment", look:"both sides of the ledger", feeds:[
+      "https://www.sciencedaily.com/rss/earth_climate.xml",
+      "https://earth.org/feed/",
+      "https://www.theguardian.com/environment/rss",
+      "https://grist.org/feed/" ]},
+  { name:"Global Health",      look:"outbreaks & public health", feeds:[
+      "https://www.who.int/feeds/entity/mediacentre/news/en/rss.xml",
+      "https://www.sciencedaily.com/rss/health_medicine/infectious_diseases.xml",
+      "https://www.statnews.com/feed/" ]},
+  { name:"World & Conflict",   look:"the harder current events", feeds:[
+      "https://feeds.bbci.co.uk/news/world/rss.xml",
+      "https://www.aljazeera.com/xml/rss/all.xml",
+      "https://www.npr.org/rss/rss.php?id=1004",
+      "https://www.france24.com/en/rss" ]},
+  { name:"Economy & Markets",  look:"the money underneath", feeds:[
+      "https://feeds.bbci.co.uk/news/business/rss.xml",
+      "https://www.theguardian.com/business/economics/rss" ]},
+  { name:"Regional Spotlights", look:"under-covered corners", feeds:[
+      "https://www.mercopress.com/rss/",
+      "https://www.scmp.com/rss/91/feed",
+      "https://www.africanews.com/feed/rss",
+      "https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf",
+      "https://www.theguardian.com/world/africa/rss" ]},
+  { name:"Weather & Civil Alerts", look:"calm, not urgent", feeds:[
+      "https://www.sciencedaily.com/rss/earth_climate/natural_disasters.xml",
+      "https://reliefweb.int/updates/rss.xml" ]}
+];
+
+/* recency: hide items whose timestamp is older than this many hours (0 = show all) */
+const MAX_AGE_HOURS = 0;   // set e.g. 48 to enforce your 24–36h rule loosely
+
+/* ---------------- engine ---------------- */
+const $ = s => document.querySelector(s);
+const feedEl=$("#feed"), statusEl=$("#status");
+let ALL=[]; // {cat, title, link, src, date}
+
+function setDateline(){
+  const now=new Date();
+  $("#dateline").textContent = now.toLocaleDateString(undefined,
+    {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  $("#proxy-label").textContent = PROXY;
+}
+
+function timeAgo(d){
+  if(!d) return "";
+  const mins=Math.round((Date.now()-d.getTime())/60000);
+  if(mins<60) return mins<=1?"just now":mins+" min ago";
+  const h=Math.round(mins/60); if(h<24) return h+"h ago";
+  const days=Math.round(h/24); return days+"d ago";
+}
+function domain(u){ try{return new URL(u).hostname.replace(/^www\./,'');}catch{return"";} }
+
+async function fetchFeed(url){
+  const proxied = PROXIES[PROXY](url);
+  const res = await fetch(proxied);
+  if(!res.ok) throw new Error(res.status);
+  if(PROXY==='rss2json'){
+    const j=await res.json();
+    return (j.items||[]).map(it=>({title:it.title,link:it.link,
+      blurb:(it.description||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,220),
+      date:it.pubDate?new Date(it.pubDate):null, src:domain(it.link||url)}));
+  }
+  const xml=new DOMParser().parseFromString(await res.text(),"text/xml");
+  const items=[...xml.querySelectorAll("item, entry")];
+  return items.map(it=>{
+    const g=t=>it.querySelector(t);
+    const link = g("link")?.textContent?.trim() || g("link")?.getAttribute("href") || "";
+    const dRaw = g("pubDate")?.textContent || g("updated")?.textContent || g("published")?.textContent;
+    const rawDesc = g("description")?.textContent || g("summary")?.textContent || g("content")?.textContent || "";
+    const blurb = rawDesc.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,220);
+    return {
+      title:(g("title")?.textContent||"").trim(),
+      link,
+      blurb,
+      date:dRaw?new Date(dRaw):null,
+      src:domain(link||url)
+    };
+  });
+}
+
+async function loadAll(){
+  ALL=[];
+  feedEl.innerHTML="";
+  statusEl.innerHTML='<span class="spin"></span>Gathering the day…';
+  let ok=0, fail=0;
+
+  for(const cat of CATEGORIES){
+    const settled = await Promise.allSettled(cat.feeds.map(fetchFeed));
+    let items=[];
+    settled.forEach(s=>{ if(s.status==="fulfilled"){ok++;items.push(...s.value);} else fail++; });
+    // dedupe by title, sort newest first, optional age filter
+    const seen=new Set();
+    items = items.filter(i=>i.title && !seen.has(i.title) && seen.add(i.title))
+                 .filter(i=> MAX_AGE_HOURS===0 || !i.date ||
+                         (Date.now()-i.date.getTime())/3.6e6 <= MAX_AGE_HOURS)
+                 .sort((a,b)=>(b.date?.getTime()||0)-(a.date?.getTime()||0))
+                 .slice(0,8);
+    items.forEach(i=>i.cat=cat.name);
+    ALL.push({cat, items});
+  }
+  render();
+  const total=ALL.reduce((n,c)=>n+c.items.length,0);
+  $("#count").textContent = total+" headlines · "+CATEGORIES.length+" sections";
+  statusEl.textContent = fail? `Loaded ${ok} feeds — ${fail} didn't respond (relay may be busy; try Refresh).`
+                             : `Loaded cleanly from ${ok} feeds.`;
+}
+
+function render(){
+  const q=$("#filter").value.trim().toLowerCase();
+  const hideNon = $("#onlyfilter").getAttribute("aria-pressed")==="true";
+  feedEl.innerHTML="";
+  ALL.forEach((block,idx)=>{
+    const matches = block.items.filter(i=> !q || i.title.toLowerCase().includes(q));
+    const show = hideNon ? matches : block.items;
+    if(hideNon && matches.length===0) return; // skip empty sections when filtering hard
+    const sec=document.createElement("section");
+    sec.className="cat";
+    sec.innerHTML=`<div class="cat-head">
+        <span class="cat-num">${String(idx+1).padStart(2,'0')}</span>
+        <span class="cat-name">${block.cat.name}</span>
+        <span class="cat-look">${block.cat.look}</span>
+      </div>`;
+    if(show.length===0){
+      sec.innerHTML+=`<p class="empty">No headlines loaded for this section right now.</p>`;
+    }
+    show.forEach(i=>{
+      const dim = (q && !i.title.toLowerCase().includes(q)) ? 'style="opacity:.4"' : '';
+      const art=document.createElement("article"); art.setAttribute("data-x",dim?"1":"0");
+      art.innerHTML=`<div ${dim}>
+          <div class="meta"><span class="src">${i.src||"source"}</span>${i.date?" · "+timeAgo(i.date):""}</div>
+          <h3><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a></h3>
+          ${i.blurb?`<p class="blurb">${i.blurb}…</p>`:""}
+        </div>`;
+      sec.appendChild(art);
+    });
+    feedEl.appendChild(sec);
+  });
+}
+
+/* events */
+$("#refresh").addEventListener("click",loadAll);
+$("#filter").addEventListener("input",render);
+$("#onlyfilter").addEventListener("click",e=>{
+  const b=e.currentTarget, on=b.getAttribute("aria-pressed")==="true";
+  b.setAttribute("aria-pressed",String(!on));
+  b.textContent = on ? "Hide non-matches" : "Show all again";
+  render();
+});
+
+setDateline();
+loadAll();
+</script>
+</body>
+</html>
