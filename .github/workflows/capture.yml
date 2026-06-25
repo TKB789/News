@@ -2,10 +2,8 @@ name: Capture daily news
 
 on:
   schedule:
-    # times are UTC. Runs at 07:00 and 19:00 UTC daily (~twice a day).
-    # adjust if you want more frequent captures.
-    - cron: '0 7 * * *'
-    - cron: '0 19 * * *'
+    # every 3 hours (8x/day), UTC. Catches nearly all items from fast wire feeds.
+    - cron: '0 */3 * * *'
   workflow_dispatch:        # lets you run it manually from the Actions tab
 
 permissions:
