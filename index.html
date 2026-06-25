@@ -66,6 +66,7 @@
     padding:11px 18px;border-radius:2px;letter-spacing:.02em;
   }
   button.ghost{background:none;color:var(--accent);border:1px solid var(--accent);}
+  button.ghost[aria-pressed="true"]{background:var(--accent);color:var(--paper);}
   button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent-warm);outline-offset:2px;}
 
   .status{font-size:15px;color:var(--ink-soft);font-style:italic;min-height:1.2em;padding:2px 0;}
@@ -97,6 +98,23 @@
   .blurb{font-size:18px;color:var(--ink-soft);line-height:1.5;margin:0;}
   .empty{font-size:16px;color:var(--ink-soft);font-style:italic;padding:6px 0 14px;}
 
+  /* ---- favorites ---- */
+  article{display:flex;gap:12px;align-items:flex-start;}
+  article .body{flex:1;min-width:0;}
+  .star{
+    flex:0 0 auto;background:none;border:none;cursor:pointer;padding:2px 4px;margin:0;
+    font-size:22px;line-height:1;color:var(--rule);transition:color .15s,transform .15s;
+  }
+  .star:hover{color:var(--accent-warm);transform:scale(1.12);}
+  .star.on{color:var(--accent-warm);}
+  .star:focus-visible{outline:2px solid var(--accent-warm);outline-offset:2px;border-radius:2px;}
+  #favbtn .badge{
+    display:inline-block;min-width:18px;margin-left:6px;padding:0 5px;border-radius:9px;
+    background:var(--accent-warm);color:var(--paper);font-size:12px;line-height:18px;text-align:center;
+    font-family:'Newsreader',serif;vertical-align:1px;
+  }
+  .fav-note{font-size:15px;color:var(--ink-soft);font-style:italic;padding:10px 0 20px;}
+
   footer{margin-top:50px;padding-top:18px;border-top:2px solid var(--ink);
     font-size:13px;color:var(--ink-soft);line-height:1.6;}
   footer code{background:var(--paper-deep);padding:1px 5px;border-radius:2px;font-size:12px;}
@@ -123,15 +141,14 @@
     <input type="search" id="filter" placeholder="Filter headlines by keyword (e.g. vaccine, eclipse, Sahel)…" aria-label="Filter headlines by keyword">
     <button id="refresh">Refresh</button>
     <button class="ghost" id="onlyfilter" aria-pressed="false">Hide non-matches</button>
+    <button class="ghost" id="favbtn" aria-pressed="false">★ Favorites<span class="badge" id="favcount" hidden>0</span></button>
   </div>
   <div class="status" id="status"></div>
 
   <main id="feed"><!-- sections injected here --></main>
 
   <footer>
-    <strong>How this works.</strong> This file reads public RSS feeds from your sources and groups them by your brief's categories. It needs no API key and stores nothing.
-    Because browsers block direct cross-site fetches, it routes feeds through free relays and automatically falls back from one to the next if a relay is busy. If everything stays blank, all relays are likely rate-limited at once — wait a minute and tap Refresh.<br><br>
-    <strong>Edit your sources.</strong> Open this file in any text editor and edit the <code>FEEDS</code> list in the script. Each entry is a category and an RSS URL. Add, remove, or reorder freely.
+    A calm daily reading of the world, gathered from public RSS feeds across science, health, culture, and current events. Headlines link to their original sources. Updated whenever you refresh.
   </footer>
 </div>
 
@@ -229,6 +246,24 @@ function timeAgo(d){
 }
 function domain(u){ try{return new URL(u).hostname.replace(/^www\./,'');}catch{return"";} }
 
+/* ---- favorites (saved per browser via localStorage) ---- */
+const FAV_KEY='quietdesk_favs';
+let FAVS={};
+try{ FAVS=JSON.parse(localStorage.getItem(FAV_KEY))||{}; }catch{ FAVS={}; }
+function saveFavs(){ try{ localStorage.setItem(FAV_KEY,JSON.stringify(FAVS)); }catch{} }
+function favId(i){ return i.link || i.title; }
+function isFav(i){ return !!FAVS[favId(i)]; }
+function toggleFav(i){
+  const id=favId(i);
+  if(FAVS[id]) delete FAVS[id];
+  else FAVS[id]={title:i.title,link:i.link,blurb:i.blurb,src:i.src,cat:i.cat,saved:Date.now()};
+  saveFavs(); updateFavCount();
+}
+function updateFavCount(){
+  const n=Object.keys(FAVS).length, el=$("#favcount");
+  el.textContent=n; el.hidden = n===0;
+}
+
 function parseItems(text, url){
   const xml=new DOMParser().parseFromString(text,"text/xml");
   const items=[...xml.querySelectorAll("item, entry")];
@@ -237,7 +272,7 @@ function parseItems(text, url){
     const link = g("link")?.textContent?.trim() || g("link")?.getAttribute("href") || "";
     const dRaw = g("pubDate")?.textContent || g("updated")?.textContent || g("published")?.textContent;
     const rawDesc = g("description")?.textContent || g("summary")?.textContent || g("content")?.textContent || "";
-    const blurb = rawDesc.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,220);
+    const blurb = rawDesc.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
     return {
       title:(g("title")?.textContent||"").trim(),
       link, blurb,
@@ -257,7 +292,7 @@ async function fetchVia(relay, url){
       const j=await res.json();
       if(!j.items||!j.items.length) throw new Error("empty");
       return j.items.map(it=>({title:it.title,link:it.link,
-        blurb:(it.description||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,220),
+        blurb:(it.description||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim(),
         date:it.pubDate?new Date(it.pubDate):null, src:domain(it.link||url)}));
     }
     const text=await res.text();
@@ -306,7 +341,54 @@ async function loadAll(){
                              : `Loaded cleanly from ${ok} feeds.`;
 }
 
+function articleNode(i, q){
+  const dimNon = (q && !i.title.toLowerCase().includes(q));
+  const art=document.createElement("article");
+  if(dimNon) art.style.opacity=".4";
+  const on = isFav(i) ? "on" : "";
+  const star=document.createElement("button");
+  star.className="star "+on;
+  star.setAttribute("aria-label", isFav(i)?"Remove from favorites":"Add to favorites");
+  star.setAttribute("aria-pressed", isFav(i)?"true":"false");
+  star.textContent = isFav(i) ? "★" : "☆";
+  star.addEventListener("click",()=>{
+    toggleFav(i);
+    const now=isFav(i);
+    star.className="star "+(now?"on":"");
+    star.textContent= now?"★":"☆";
+    star.setAttribute("aria-pressed",String(now));
+    star.setAttribute("aria-label", now?"Remove from favorites":"Add to favorites");
+    if($("#favbtn").getAttribute("aria-pressed")==="true" && !now) art.remove();
+  });
+  const body=document.createElement("div");
+  body.className="body";
+  body.innerHTML=`
+      <div class="meta"><span class="src">${i.src||"source"}</span>${i.date?" · "+timeAgo(i.date):""}${i.cat?' · '+i.cat:''}</div>
+      <h3><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a></h3>
+      ${i.blurb?`<p class="blurb">${i.blurb}</p>`:""}`;
+  art.appendChild(star); art.appendChild(body);
+  return art;
+}
+
+function renderFavorites(){
+  feedEl.innerHTML="";
+  const favs=Object.values(FAVS).sort((a,b)=>b.saved-a.saved);
+  const sec=document.createElement("section"); sec.className="cat";
+  sec.innerHTML=`<div class="cat-head">
+      <span class="cat-num">★</span>
+      <span class="cat-name">Favorites</span>
+      <span class="cat-look">saved on this device</span>
+    </div>`;
+  if(favs.length===0){
+    sec.innerHTML+=`<p class="fav-note">No favorites yet. Tap the star beside any headline to keep it here.</p>`;
+  } else {
+    favs.forEach(i=>sec.appendChild(articleNode(i,"")));
+  }
+  feedEl.appendChild(sec);
+}
+
 function render(){
+  if($("#favbtn").getAttribute("aria-pressed")==="true"){ renderFavorites(); return; }
   const q=$("#filter").value.trim().toLowerCase();
   const hideNon = $("#onlyfilter").getAttribute("aria-pressed")==="true";
   feedEl.innerHTML="";
@@ -324,16 +406,7 @@ function render(){
     if(show.length===0){
       sec.innerHTML+=`<p class="empty">No headlines loaded for this section right now.</p>`;
     }
-    show.forEach(i=>{
-      const dim = (q && !i.title.toLowerCase().includes(q)) ? 'style="opacity:.4"' : '';
-      const art=document.createElement("article"); art.setAttribute("data-x",dim?"1":"0");
-      art.innerHTML=`<div ${dim}>
-          <div class="meta"><span class="src">${i.src||"source"}</span>${i.date?" · "+timeAgo(i.date):""}</div>
-          <h3><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a></h3>
-          ${i.blurb?`<p class="blurb">${i.blurb}…</p>`:""}
-        </div>`;
-      sec.appendChild(art);
-    });
+    show.forEach(i=>sec.appendChild(articleNode(i,q)));
     feedEl.appendChild(sec);
   });
 }
@@ -347,7 +420,15 @@ $("#onlyfilter").addEventListener("click",e=>{
   b.textContent = on ? "Hide non-matches" : "Show all again";
   render();
 });
+$("#favbtn").addEventListener("click",e=>{
+  const b=e.currentTarget, on=b.getAttribute("aria-pressed")==="true";
+  b.setAttribute("aria-pressed",String(!on));
+  // rebuild label, preserving the badge
+  b.firstChild.textContent = on ? "★ Favorites" : "★ Showing favorites";
+  render();
+});
 
+updateFavCount();
 setDateline();
 loadAll();
 </script>
