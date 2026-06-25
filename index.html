@@ -135,6 +135,18 @@
   .menu-item[disabled]{opacity:.4;cursor:default;}
   .menu-item[disabled]:hover{background:none;}
 
+  /* ---- within-section pager ---- */
+  .pager{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
+    margin:24px 0 8px;padding-top:18px;border-top:3px double var(--rule);}
+  .pager-arrow{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+    cursor:pointer;background:none;color:var(--ink);border:1px solid var(--ink);padding:8px 13px;}
+  .pager-arrow[disabled]{opacity:.3;cursor:default;}
+  .pager-nums{display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center;}
+  .pager-num{font-family:'Playfair Display',serif;font-size:16px;cursor:pointer;
+    background:none;color:var(--ink);border:1px solid var(--hair);min-width:38px;padding:7px 0;text-align:center;}
+  .pager-num.cur{background:var(--ink);color:var(--news);border-color:var(--ink);font-weight:700;}
+  .pager-ell{font-family:'Playfair Display',serif;color:var(--ink-soft);padding:0 2px;}
+
   footer{margin-top:46px;padding-top:14px;border-top:3px double var(--rule);
     font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
     color:var(--ink-soft);line-height:1.7;text-align:center;}
@@ -193,6 +205,8 @@ let INDEX=[];          // array of date keys, oldest→newest
 let CACHE={};          // dateKey -> snapshot json
 let SELECTED=null;
 let VIEW='menu';       // 'menu' | section index (number) | 'clippings'
+let PAGE=0;            // current page within a section (0-based)
+const PER_PAGE=25;     // reports per page
 
 /* favorites */
 const FAV_KEY='quietdesk_favs';
@@ -261,6 +275,7 @@ function buildTabs(){
 async function selectDay(k){
   SELECTED=k;
   VIEW='menu';
+  PAGE=0;
   $("#favbtn").setAttribute("aria-pressed","false");
   $("#favbtn").firstChild.textContent="★ Clippings";
   buildTabs();
@@ -345,7 +360,7 @@ function renderMenu(day,q){
     listed++;
     const b=document.createElement("button"); b.className="menu-item";
     b.innerHTML=`<span class="mi-name">${block.name}</span><span class="mi-count">${n} report${n===1?"":"s"}</span><span class="mi-arrow">›</span>`;
-    b.addEventListener("click",()=>{ VIEW=idx; render(); window.scrollTo({top:0,behavior:'instant'}); });
+    b.addEventListener("click",()=>{ VIEW=idx; PAGE=0; render(); window.scrollTo({top:0,behavior:'instant'}); });
     list.appendChild(b);
   });
   if(listed===0){
@@ -368,8 +383,62 @@ function renderSection(day){
   $("#secprev").disabled = nextPopulated(idx,-1) < 0;
   $("#secnext").disabled = nextPopulated(idx,1) < 0;
   feedEl.innerHTML="";
-  feedEl.appendChild(sectionBlock(block,"",true).sec);
-  $("#count").textContent = isToday(SELECTED)?"today's edition":keyToDate(SELECTED).toLocaleDateString();
+
+  const totalPages=Math.max(1,Math.ceil(block.items.length/PER_PAGE));
+  if(PAGE>=totalPages) PAGE=totalPages-1;
+  if(PAGE<0) PAGE=0;
+  const start=PAGE*PER_PAGE;
+  const pageItems=block.items.slice(start,start+PER_PAGE);
+
+  // section header + rule
+  const sec=document.createElement("section"); sec.className="cat";
+  const head=document.createElement("div"); head.className="cat-head";
+  head.innerHTML=`<span class="cat-name">${block.name}</span>`;
+  sec.appendChild(head);
+  const ruleDiv=document.createElement("div"); ruleDiv.className="cat-rule"; sec.appendChild(ruleDiv);
+
+  // lead only on the first page
+  let items=pageItems.slice();
+  if(PAGE===0){
+    const lead=articleNode(items.shift(),"",true);
+    sec.appendChild(lead);
+  }
+  const colWrap=document.createElement("div"); colWrap.className="cat-body";
+  items.forEach(i=>colWrap.appendChild(articleNode(i,"")));
+  sec.appendChild(colWrap);
+  feedEl.appendChild(sec);
+
+  if(totalPages>1) feedEl.appendChild(buildPager(totalPages));
+
+  $("#count").textContent = (isToday(SELECTED)?"today's edition":keyToDate(SELECTED).toLocaleDateString())
+    + (totalPages>1?` · page ${PAGE+1} of ${totalPages}`:"");
+}
+
+function buildPager(totalPages){
+  const nav=document.createElement("nav"); nav.className="pager"; nav.setAttribute("aria-label","Section pages");
+  const go=p=>{ PAGE=p; render(); window.scrollTo({top:0,behavior:'instant'}); };
+
+  const prev=document.createElement("button"); prev.className="pager-arrow"; prev.textContent="‹ Prev";
+  prev.disabled=PAGE<=0; prev.addEventListener("click",()=>go(PAGE-1)); nav.appendChild(prev);
+
+  // windowed page numbers: 1 … (cur-1 cur cur+1) … last
+  const nums=document.createElement("div"); nums.className="pager-nums";
+  const add=(p)=>{ const b=document.createElement("button"); b.className="pager-num"+(p===PAGE?" cur":"");
+    b.textContent=p+1; b.setAttribute("aria-current",p===PAGE?"page":"false");
+    b.addEventListener("click",()=>go(p)); nums.appendChild(b); };
+  const ell=()=>{ const s=document.createElement("span"); s.className="pager-ell"; s.textContent="…"; nums.appendChild(s); };
+
+  const win=1; // pages on each side of current
+  const pages=new Set([0,totalPages-1]);
+  for(let p=PAGE-win;p<=PAGE+win;p++){ if(p>=0&&p<totalPages) pages.add(p); }
+  const sorted=[...pages].sort((a,b)=>a-b);
+  let last=-1;
+  sorted.forEach(p=>{ if(last>=0 && p-last>1) ell(); add(p); last=p; });
+  nav.appendChild(nums);
+
+  const next=document.createElement("button"); next.className="pager-arrow"; next.textContent="Next ›";
+  next.disabled=PAGE>=totalPages-1; next.addEventListener("click",()=>go(PAGE+1)); nav.appendChild(next);
+  return nav;
 }
 
 function renderSearch(day,q){
@@ -403,8 +472,8 @@ function nextPopulated(from,dir){
   return -1;
 }
 $("#secmenu").addEventListener("click",()=>{ VIEW='menu'; render(); window.scrollTo({top:0,behavior:'instant'}); });
-$("#secprev").addEventListener("click",()=>{ const p=nextPopulated(VIEW,-1); if(p>=0){ VIEW=p; render(); window.scrollTo({top:0,behavior:'instant'}); } });
-$("#secnext").addEventListener("click",()=>{ const p=nextPopulated(VIEW,1); if(p>=0){ VIEW=p; render(); window.scrollTo({top:0,behavior:'instant'}); } });
+$("#secprev").addEventListener("click",()=>{ const p=nextPopulated(VIEW,-1); if(p>=0){ VIEW=p; PAGE=0; render(); window.scrollTo({top:0,behavior:'instant'}); } });
+$("#secnext").addEventListener("click",()=>{ const p=nextPopulated(VIEW,1); if(p>=0){ VIEW=p; PAGE=0; render(); window.scrollTo({top:0,behavior:'instant'}); } });
 
 $("#filter").addEventListener("input",render);
 $("#favbtn").addEventListener("click",e=>{ const b=e.currentTarget,on=b.getAttribute("aria-pressed")==="true";
