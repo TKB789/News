@@ -136,8 +136,10 @@
   .menu-item[disabled]:hover{background:none;}
 
   /* ---- within-section pager ---- */
+  .pager-caption{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--accent);text-align:center;margin:22px 0 0;padding-top:18px;border-top:3px double var(--rule);}
   .pager{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
-    margin:24px 0 8px;padding-top:18px;border-top:3px double var(--rule);}
+    margin:12px 0 8px;}
   .pager-arrow{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
     cursor:pointer;background:none;color:var(--ink);border:1px solid var(--ink);padding:8px 13px;}
   .pager-arrow[disabled]{opacity:.3;cursor:default;}
@@ -422,27 +424,31 @@ function renderSection(day){
   sec.appendChild(colWrap);
   feedEl.appendChild(sec);
 
-  if(totalPages>1) feedEl.appendChild(buildPager(totalPages));
+  if(totalPages>1) feedEl.appendChild(buildPager(totalPages, block.name));
 
   $("#count").textContent = (isToday(SELECTED)?"today's edition":keyToDate(SELECTED).toLocaleDateString())
     + (totalPages>1?` · page ${PAGE+1} of ${totalPages}`:"");
 }
 
-function buildPager(totalPages){
-  const nav=document.createElement("nav"); nav.className="pager"; nav.setAttribute("aria-label","Section pages");
+function buildPager(totalPages, sectionName){
+  const wrap=document.createElement("div"); wrap.className="pager-wrap";
+  const cap=document.createElement("div"); cap.className="pager-caption";
+  cap.textContent=`${sectionName} — page ${PAGE+1} of ${totalPages}`;
+  wrap.appendChild(cap);
+
+  const nav=document.createElement("nav"); nav.className="pager"; nav.setAttribute("aria-label",`${sectionName} pages`);
   const go=p=>{ PAGE=p; render(); window.scrollTo({top:0,behavior:'instant'}); };
 
-  const prev=document.createElement("button"); prev.className="pager-arrow"; prev.textContent="‹ Prev";
+  const prev=document.createElement("button"); prev.className="pager-arrow"; prev.textContent="‹ Prev page";
   prev.disabled=PAGE<=0; prev.addEventListener("click",()=>go(PAGE-1)); nav.appendChild(prev);
 
-  // windowed page numbers: 1 … (cur-1 cur cur+1) … last
   const nums=document.createElement("div"); nums.className="pager-nums";
   const add=(p)=>{ const b=document.createElement("button"); b.className="pager-num"+(p===PAGE?" cur":"");
-    b.textContent=p+1; b.setAttribute("aria-current",p===PAGE?"page":"false");
+    b.textContent=p+1; b.setAttribute("aria-label",`Page ${p+1}`); b.setAttribute("aria-current",p===PAGE?"page":"false");
     b.addEventListener("click",()=>go(p)); nums.appendChild(b); };
   const ell=()=>{ const s=document.createElement("span"); s.className="pager-ell"; s.textContent="…"; nums.appendChild(s); };
 
-  const win=1; // pages on each side of current
+  const win=1;
   const pages=new Set([0,totalPages-1]);
   for(let p=PAGE-win;p<=PAGE+win;p++){ if(p>=0&&p<totalPages) pages.add(p); }
   const sorted=[...pages].sort((a,b)=>a-b);
@@ -450,9 +456,10 @@ function buildPager(totalPages){
   sorted.forEach(p=>{ if(last>=0 && p-last>1) ell(); add(p); last=p; });
   nav.appendChild(nums);
 
-  const next=document.createElement("button"); next.className="pager-arrow"; next.textContent="Next ›";
+  const next=document.createElement("button"); next.className="pager-arrow"; next.textContent="Next page ›";
   next.disabled=PAGE>=totalPages-1; next.addEventListener("click",()=>go(PAGE+1)); nav.appendChild(next);
-  return nav;
+  wrap.appendChild(nav);
+  return wrap;
 }
 
 function renderSearch(day,q){
