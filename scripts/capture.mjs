@@ -16,7 +16,10 @@ const CATEGORIES = [
     "https://skyandtelescope.org/feed/",
     "https://www.universetoday.com/feed/",
     "https://www.esa.int/rssfeed/TopNews",
-    "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml" ]},
+    "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",
+    "https://www.spaceweather.com/spaceweather.xml",
+    "https://www.nasa.gov/rss/dyn/lg_image_of_the_day.rss",
+    "https://www.jpl.nasa.gov/feeds/news/" ]},
   { name:"Science & Medicine", look:"discoveries that help people", feeds:[
     "https://www.sciencedaily.com/rss/top/science.xml",
     "https://www.sciencedaily.com/rss/health_medicine.xml",
@@ -24,7 +27,9 @@ const CATEGORIES = [
     "https://phys.org/rss-feed/",
     "https://www.eurekalert.org/rss/breaking.xml",
     "https://www.science.org/rss/news_current.xml",
-    "https://www.newscientist.com/feed/home/" ]},
+    "https://www.newscientist.com/feed/home/",
+    "https://www.nature.com/nm.rss",
+    "https://connect.biorxiv.org/biorxiv_xml.php?subject=all" ]},
   { name:"Good Developments", look:"progress, quietly", feeds:[
     "https://www.positive.news/feed/",
     "https://www.goodnewsnetwork.org/feed/",
@@ -46,19 +51,23 @@ const CATEGORIES = [
     "https://www.who.int/feeds/entity/mediacentre/news/en/rss.xml",
     "https://www.sciencedaily.com/rss/health_medicine/infectious_diseases.xml",
     "https://www.statnews.com/feed/",
-    "https://feeds.bbci.co.uk/news/health/rss.xml" ]},
+    "https://feeds.bbci.co.uk/news/health/rss.xml",
+    "https://www.thelancet.com/rssfeed/lancet_online.xml",
+    "https://www.cidrap.umn.edu/news/rss.xml" ]},
   { name:"Technology", look:"how the tools are changing", feeds:[
     "https://www.theverge.com/rss/index.xml",
     "https://arstechnica.com/feed/",
     "https://www.wired.com/feed/rss",
     "https://feeds.bbci.co.uk/news/technology/rss.xml",
-    "https://www.technologyreview.com/feed/" ]},
+    "https://www.technologyreview.com/feed/",
+    "https://restofworld.org/feed/latest/" ]},
   { name:"World & Conflict", look:"the harder current events", feeds:[
     "https://feeds.bbci.co.uk/news/world/rss.xml",
     "https://www.aljazeera.com/xml/rss/all.xml",
     "https://www.npr.org/rss/rss.php?id=1004",
     "https://www.france24.com/en/rss",
-    "https://rss.dw.com/rdf/rss-en-world" ]},
+    "https://rss.dw.com/rdf/rss-en-world",
+    "https://news.un.org/feed/subscribe/en/news/all/rss.xml" ]},
   { name:"Economy & Markets", look:"the money underneath", feeds:[
     "https://feeds.bbci.co.uk/news/business/rss.xml",
     "https://www.theguardian.com/business/economics/rss",
@@ -71,15 +80,22 @@ const CATEGORIES = [
     "https://feeds.bbci.co.uk/sport/rss.xml",
     "https://www.espn.com/espn/rss/news",
     "https://www.theguardian.com/sport/rss" ]},
+  { name:"Humanitarian & Development", look:"crises, aid, and the long work", feeds:[
+    "https://reliefweb.int/updates/rss.xml",
+    "https://news.un.org/feed/subscribe/en/news/topic/humanitarian-aid/feed/rss.xml",
+    "https://www.thenewhumanitarian.org/rss.xml",
+    "https://www.devex.com/news.rss",
+    "https://globalvoices.org/feed/" ]},
   { name:"Regional Spotlights", look:"under-covered corners", feeds:[
     "https://www.mercopress.com/rss/",
     "https://www.scmp.com/rss/91/feed",
     "https://www.africanews.com/feed/rss",
     "https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf",
-    "https://www.theguardian.com/world/africa/rss" ]},
+    "https://www.theguardian.com/world/africa/rss",
+    "https://restofworld.org/feed/latest/" ]},
   { name:"Weather & Civil Alerts", look:"calm, not urgent", feeds:[
     "https://www.sciencedaily.com/rss/earth_climate/natural_disasters.xml",
-    "https://reliefweb.int/updates/rss.xml" ]}
+    "https://gdacs.org/xml/rss.xml" ]}
 ];
 
 const DATA_DIR = 'data';
