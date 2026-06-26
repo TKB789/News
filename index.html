@@ -246,7 +246,7 @@ function timeAgo(x){ if(!x) return ""; const d=new Date(x); if(isNaN(d)) return 
 async function loadIndex(){
   statusEl.innerHTML='<span class="spin"></span>Loading archive…';
   try{
-    const res=await fetch(DATA+'index.json',{cache:'no-store'});
+    const res=await fetch(DATA+'index.json?t='+Date.now(),{cache:'no-store'});
     if(!res.ok) throw new Error(res.status);
     const j=await res.json();
     INDEX=(j.days||[]).slice().sort();
@@ -264,7 +264,9 @@ async function loadIndex(){
 
 async function getDay(k){
   if(CACHE[k]) return CACHE[k];
-  const res=await fetch(`${DATA}${k}.json`,{cache:'no-store'});
+  // bust cache only for today's file (it changes through the day); older days are immutable
+  const bust = isToday(k) ? '?t='+Date.now() : '';
+  const res=await fetch(`${DATA}${k}.json${bust}`,{cache:'no-store'});
   if(!res.ok) throw new Error(res.status);
   const j=await res.json(); CACHE[k]=j; return j;
 }
