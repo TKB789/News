@@ -35,12 +35,11 @@ const CATEGORIES = [
     "https://aeon.co/feed.rss",
     "https://knowablemagazine.org/rss",
     "https://nautil.us/feed/" ]},
-  { name:"Good Developments", look:"progress, quietly", feeds:[
+  { name:"Progress & Solutions", look:"solutions journalism", feeds:[
     "https://www.positive.news/feed/",
     "https://www.goodnewsnetwork.org/feed/",
     "https://reasonstobecheerful.world/feed/",
-    "https://www.yesmagazine.org/feed",
-    "https://rss.csmonitor.com/feeds/csm" ]},
+    "https://www.yesmagazine.org/feed" ]},
   { name:"Arts & Culture", look:"human achievement", feeds:[
     "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml",
     "https://www.theguardian.com/culture/rss",
