@@ -313,9 +313,11 @@ function toggleFav(i){ const id=favId(i);
   saveFavs(); updateFavCount(); }
 function updateFavCount(){ const n=Object.keys(FAVS).length,el=$("#favcount"); el.textContent=n; el.hidden=n===0; }
 
-function keyToDate(k){ const [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); }
-function isToday(k){ return k===new Date().toISOString().slice(0,10); }
-function setDateline(d){ $("#dateline").textContent=d.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'}); }
+function keyToDate(k){ const [y,m,d]=k.split('-').map(Number); return new Date(Date.UTC(y,m-1,d)); }
+function utcKey(d){ return d.toISOString().slice(0,10); }              // UTC date, matches capture script
+function todayUtcKey(){ return new Date().toISOString().slice(0,10); }
+function isToday(k){ return k===todayUtcKey(); }
+function setDateline(d){ $("#dateline").textContent=d.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric',timeZone:'UTC'}); }
 function timeAgo(x){ if(!x) return ""; const d=new Date(x); if(isNaN(d)) return "";
   const m=Math.round((Date.now()-d)/60000); if(m<0)return""; if(m<60)return m<=1?"just now":m+" min ago";
   const h=Math.round(m/60); if(h<24)return h+"h ago"; return Math.round(h/24)+"d ago"; }
@@ -330,9 +332,15 @@ async function loadIndex(){
   }catch(e){ INDEX=[]; }
   buildTabs();
   if(INDEX.length){
-    const latest=INDEX[INDEX.length-1];
-    await selectDay(latest);
-    statusEl.textContent=`Archive: ${INDEX.length} day${INDEX.length>1?'s':''} captured.`;
+    const todayKey=todayUtcKey();
+    // default to today's edition if it's been captured; otherwise the most recent day
+    const target = INDEX.includes(todayKey) ? todayKey : INDEX[INDEX.length-1];
+    await selectDay(target);
+    if(target!==todayKey){
+      statusEl.textContent=`Today's edition not captured yet — showing ${target}. Archive: ${INDEX.length} days.`;
+    } else {
+      statusEl.textContent=`Archive: ${INDEX.length} day${INDEX.length>1?'s':''} captured.`;
+    }
   } else {
     feedEl.innerHTML=`<p class="fav-note">No snapshots yet. Once the daily capture runs in GitHub Actions, days will appear here. You can trigger the first run manually from the repo's Actions tab → “Capture daily news” → Run workflow.</p>`;
     statusEl.textContent="";
@@ -350,21 +358,33 @@ async function getDay(k){
 
 function buildTabs(){
   const strip=$("#days"); strip.innerHTML="";
-  // show a continuous 14-day window ending today; mark which have captures
-  const today=new Date(); const WINDOW=14;
-  for(let n=WINDOW-1;n>=0;n--){
-    const d=new Date(today.getFullYear(),today.getMonth(),today.getDate()-n);
-    const k=d.toISOString().slice(0,10);
+  const WINDOW=14;
+  const todayKey=todayUtcKey();
+  const base=new Date(todayKey+"T00:00:00Z");
+
+  // collect the rolling 14-day window...
+  const set=new Set();
+  for(let n=WINDOW-1;n>=0;n--) set.add(utcKey(new Date(base.getTime()-n*864e5)));
+  // ...PLUS every day that actually has data, so a captured day can never be tab-less
+  INDEX.forEach(k=>set.add(k));
+  // always include today even if not yet captured
+  set.add(todayKey);
+
+  const keys=[...set].sort();   // chronological, oldest→newest (today on the right)
+  keys.forEach(k=>{
     const has=INDEX.includes(k);
+    const isTodayTab=(k===todayKey);
+    const d=new Date(k+"T00:00:00Z");
     const btn=document.createElement("button");
     btn.className="day"+(has?"":" empty-day")+(k===SELECTED?" sel":"");
     btn.setAttribute("role","tab"); btn.setAttribute("aria-selected",k===SELECTED?"true":"false");
-    const dow=n===0?"Today":d.toLocaleDateString(undefined,{weekday:'short'});
-    btn.innerHTML=`<span class="dow">${dow}</span><span class="dnum">${d.getDate()}</span>${has?'<span class="dot"></span>':''}`;
-    btn.title=has?`Captured ${d.toLocaleDateString()}`:`No capture for ${d.toLocaleDateString()}`;
+    const dow=isTodayTab?"Today":d.toLocaleDateString(undefined,{weekday:'short',timeZone:'UTC'});
+    const dnum=d.toLocaleDateString(undefined,{day:'numeric',timeZone:'UTC'});
+    btn.innerHTML=`<span class="dow">${dow}</span><span class="dnum">${dnum}</span>${has?'<span class="dot"></span>':''}`;
+    btn.title=has?`Captured ${k}`:`No capture for ${k}`;
     if(has) btn.addEventListener("click",()=>selectDay(k));
     strip.appendChild(btn);
-  }
+  });
 }
 
 async function selectDay(k){
