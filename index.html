@@ -192,6 +192,7 @@
   .rsvp-open-article{display:block;margin:22px auto 0;background:none;border:1px solid var(--news);
     color:var(--news);cursor:pointer;font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.08em;
     text-transform:uppercase;padding:9px 16px;}
+  .rsvp-open-article[hidden]{display:none;}
   .rsvp-open-article:hover{background:var(--news);color:var(--ink);}
 
   /* ---- floating scroll buttons ---- */
@@ -689,7 +690,13 @@ $("#rsvpStepBack").addEventListener("click",()=>{ rsvpPause(); rsvp.idx=Math.max
 $("#rsvpStepFwd").addEventListener("click",()=>{ rsvpPause(); rsvp.idx=Math.min(rsvp.words.length-1,rsvp.idx+1); rsvpShow(); });
 $("#rsvpScrub").addEventListener("input",e=>{ rsvpPause(); rsvp.idx=+e.target.value; rsvpShow(); });
 $("#rsvpWpm").addEventListener("input",e=>{ rsvp.wpm=+e.target.value; $("#rsvpWpmVal").textContent=e.target.value; });
-$("#rsvpOpen").addEventListener("click",()=>{ if(rsvp.link) window.open(rsvp.link,"_blank","noopener"); });
+$("#rsvpOpen").addEventListener("click",()=>{
+  if(!rsvp.link) return;
+  rsvpPause();
+  const a=document.createElement("a");
+  a.href=rsvp.link; a.target="_blank"; a.rel="noopener noreferrer";
+  document.body.appendChild(a); a.click(); a.remove();
+});
 rsvpEl.addEventListener("click",e=>{ if(e.target===rsvpEl) rsvpClose(); });
 document.addEventListener("keydown",e=>{
   if(rsvpEl.hidden) return;
