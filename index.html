@@ -113,6 +113,7 @@
   /* ---- section nav bar ---- */
   .secnav{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
     padding:10px 0;border-bottom:1px solid var(--rule);margin-bottom:6px;}
+  .secnav[hidden]{display:none;}
   .secnav-btn,.secnav-arrow{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.08em;
     text-transform:uppercase;cursor:pointer;background:none;color:var(--ink);
     border:1px solid var(--ink);padding:8px 13px;border-radius:0;}
@@ -162,11 +163,12 @@
   .mini-read:hover{border-color:var(--accent);color:var(--accent);}
 
   /* ---- RSVP overlay ---- */
-  .rsvp{position:fixed;inset:0;z-index:200;background:rgba(20,17,12,.97);
+  .rsvp{position:fixed;inset:0;z-index:200;background:#14110c;
     display:flex;align-items:center;justify-content:center;padding:20px;}
+  .rsvp[hidden]{display:none;}
   .rsvp-box{width:100%;max-width:560px;color:var(--news);text-align:center;position:relative;}
-  .rsvp-close{position:absolute;top:-6px;right:0;background:none;border:none;color:var(--news);
-    font-size:22px;cursor:pointer;font-family:'Spectral',serif;opacity:.7;}
+  .rsvp-close{position:absolute;top:-10px;right:-6px;background:none;border:none;color:var(--news);
+    font-size:30px;cursor:pointer;font-family:'Spectral',serif;opacity:.85;padding:10px;line-height:1;}
   .rsvp-close:hover{opacity:1;}
   .rsvp-context{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
     color:#b8a98c;margin-bottom:24px;min-height:1.2em;padding:0 28px;}
@@ -194,6 +196,7 @@
 
   /* ---- floating scroll buttons ---- */
   .scroll-btns{position:fixed;right:16px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:50;}
+  .scroll-btns[hidden]{display:none;}
   .scroll-btn{width:46px;height:46px;border-radius:50%;border:1px solid var(--news);
     background:var(--ink);color:var(--news);font-size:20px;line-height:1;cursor:pointer;
     box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;padding:0;
@@ -670,6 +673,7 @@ function rsvpPause(){
   clearTimeout(rsvp.timer);
 }
 function rsvpOpen(words, contextLabel, link){
+  if(!words || words.length===0) return;   // never open empty
   rsvp.words=words; rsvp.idx=0; rsvp.link=link||null;
   $("#rsvpContext").textContent=contextLabel||"";
   $("#rsvpOpen").hidden=!link;
