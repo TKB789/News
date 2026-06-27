@@ -1,0 +1,39 @@
+name: One-time cleanup (rename + strip hard news)
+
+# Run this MANUALLY once from the Actions tab → "One-time cleanup" → "Run workflow".
+# It rewrites archived day files to rename "Good Developments" → "Progress & Solutions"
+# and remove csmonitor.com hard-news items from that section. Then it commits the changes.
+# After it runs successfully once, you can delete this file and scripts/cleanup-once.mjs.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Run one-time cleanup
+        run: node scripts/cleanup-once.mjs
+
+      - name: Commit cleaned archive
+        run: |
+          git config user.name  "quiet-desk-bot"
+          git config user.email "actions@github.com"
+          git add data/
+          if git diff --staged --quiet; then
+            echo "No changes needed."
+          else
+            git commit -m "One-time cleanup: rename section + strip misfiled hard news"
+            git push
+          fi
