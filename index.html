@@ -149,6 +149,49 @@
   .pager-num.cur{background:var(--ink);color:var(--news);border-color:var(--ink);font-weight:700;}
   .pager-ell{font-family:'Playfair Display',serif;color:var(--ink-soft);padding:0 2px;}
 
+  /* ---- speed-read buttons ---- */
+  .speedread-btn{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    cursor:pointer;background:var(--accent);color:var(--news);border:none;padding:8px 14px;border-radius:0;
+    display:inline-flex;align-items:center;gap:6px;}
+  .speedread-btn:hover{filter:brightness(1.1);}
+  .sec-speedread{margin:2px 0 6px;}
+  .star-row{display:flex;align-items:center;gap:8px;}
+  .mini-read{flex:0 0 auto;background:none;border:1px solid var(--hair);cursor:pointer;
+    font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--ink-soft);padding:3px 7px;margin-top:2px;}
+  .mini-read:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* ---- RSVP overlay ---- */
+  .rsvp{position:fixed;inset:0;z-index:200;background:rgba(20,17,12,.97);
+    display:flex;align-items:center;justify-content:center;padding:20px;}
+  .rsvp-box{width:100%;max-width:560px;color:var(--news);text-align:center;position:relative;}
+  .rsvp-close{position:absolute;top:-6px;right:0;background:none;border:none;color:var(--news);
+    font-size:22px;cursor:pointer;font-family:'Spectral',serif;opacity:.7;}
+  .rsvp-close:hover{opacity:1;}
+  .rsvp-context{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+    color:#b8a98c;margin-bottom:24px;min-height:1.2em;padding:0 28px;}
+  .rsvp-stage{position:relative;padding:30px 0;margin-bottom:8px;}
+  .rsvp-guide{height:14px;width:2px;background:var(--accent);margin:0 auto;}
+  .rsvp-word{font-family:'Spectral',serif;font-size:clamp(34px,9vw,54px);line-height:1.1;
+    min-height:1.2em;padding:10px 0;letter-spacing:.01em;white-space:nowrap;}
+  .rsvp-word .orp{color:#e8714a;}   /* optimal recognition point letter */
+  .rsvp-scrub{width:100%;margin:8px 0 4px;accent-color:var(--accent);}
+  .rsvp-progress{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.1em;color:#b8a98c;margin-bottom:18px;}
+  .rsvp-controls{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:20px;}
+  .rsvp-ctrl{background:none;border:1px solid var(--news);color:var(--news);cursor:pointer;
+    width:54px;height:54px;border-radius:50%;font-size:22px;display:flex;align-items:center;justify-content:center;
+    font-family:'Spectral',serif;}
+  .rsvp-ctrl:hover{background:var(--news);color:var(--ink);}
+  .rsvp-play{width:66px;height:66px;font-size:26px;}
+  .rsvp-speed{display:flex;align-items:center;justify-content:center;gap:12px;
+    font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#b8a98c;}
+  .rsvp-speed input[type=range]{width:160px;accent-color:var(--accent);}
+  #rsvpWpmVal{min-width:34px;text-align:left;color:var(--news);}
+  .rsvp-open-article{display:block;margin:22px auto 0;background:none;border:1px solid var(--news);
+    color:var(--news);cursor:pointer;font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.08em;
+    text-transform:uppercase;padding:9px 16px;}
+  .rsvp-open-article:hover{background:var(--news);color:var(--ink);}
+
   /* ---- floating scroll buttons ---- */
   .scroll-btns{position:fixed;right:16px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:50;}
   .scroll-btn{width:46px;height:46px;border-radius:50%;border:1px solid var(--news);
@@ -202,6 +245,31 @@
   <div class="scroll-btns" id="scrollbtns" hidden>
     <button id="scrolltop" class="scroll-btn" aria-label="Jump to top">↑</button>
     <button id="scrollbot" class="scroll-btn" aria-label="Jump to bottom">↓</button>
+  </div>
+
+  <div class="rsvp" id="rsvp" hidden role="dialog" aria-modal="true" aria-label="Speed reader">
+    <div class="rsvp-box">
+      <button class="rsvp-close" id="rsvpClose" aria-label="Close speed reader">✕</button>
+      <div class="rsvp-context" id="rsvpContext"></div>
+      <div class="rsvp-stage">
+        <div class="rsvp-guide"></div>
+        <div class="rsvp-word" id="rsvpWord">Ready</div>
+        <div class="rsvp-guide"></div>
+      </div>
+      <input type="range" id="rsvpScrub" class="rsvp-scrub" min="0" max="100" value="0" aria-label="Scrub through text">
+      <div class="rsvp-progress" id="rsvpProgress">— / —</div>
+      <div class="rsvp-controls">
+        <button id="rsvpStepBack" class="rsvp-ctrl" aria-label="Previous word">‹</button>
+        <button id="rsvpPlay" class="rsvp-ctrl rsvp-play" aria-label="Play or pause">▶</button>
+        <button id="rsvpStepFwd" class="rsvp-ctrl" aria-label="Next word">›</button>
+      </div>
+      <div class="rsvp-speed">
+        <span>WPM</span>
+        <input type="range" id="rsvpWpm" min="150" max="900" step="25" value="500" aria-label="Words per minute">
+        <span id="rsvpWpmVal">500</span>
+      </div>
+      <button class="rsvp-open-article" id="rsvpOpen" hidden>Open this article ↗</button>
+    </div>
   </div>
 
   <footer>
@@ -317,6 +385,9 @@ function articleNode(i,q,isLead){
   body.innerHTML=`<div class="meta"><span class="src">${i.src||"source"}</span>${i.date?" · "+timeAgo(i.date):""}${i.cat?' · '+i.cat:''}</div>
     <h3><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a></h3>
     ${i.blurb?`<p class="blurb">${i.blurb}</p>`:""}`;
+  const read=document.createElement("button"); read.className="mini-read"; read.textContent="▶ Speed-read";
+  read.addEventListener("click",()=>rsvpOpen(buildQueueFromReport(i), (i.cat||"Report")+" · single report", i.link));
+  body.appendChild(read);
   art.appendChild(star); art.appendChild(body); return art;
 }
 
@@ -414,6 +485,14 @@ function renderSection(day){
   head.innerHTML=`<span class="cat-name">${block.name}</span>`;
   sec.appendChild(head);
   const ruleDiv=document.createElement("div"); ruleDiv.className="cat-rule"; sec.appendChild(ruleDiv);
+
+  // section-level speed-read (reads all reports in this section)
+  const srWrap=document.createElement("div"); srWrap.className="sec-speedread";
+  const srBtn=document.createElement("button"); srBtn.className="speedread-btn";
+  srBtn.innerHTML="▶ Speed-read section";
+  srBtn.addEventListener("click",()=>rsvpOpen(buildQueueFromSection(block), `${block.name} · ${block.items.length} reports`, null));
+  srWrap.appendChild(srBtn);
+  sec.appendChild(srWrap);
 
   // lead only on the first page
   let items=pageItems.slice();
@@ -515,6 +594,106 @@ function updateScrollBtns(){
 }
 window.addEventListener("resize",updateScrollBtns);
 window.addEventListener("scroll",updateScrollBtns,{passive:true});
+
+/* ============ RSVP speed reader ============ */
+const rsvp={ words:[], idx:0, playing:false, timer:null, wpm:500, link:null };
+const rsvpEl=$("#rsvp"), rsvpWord=$("#rsvpWord");
+
+function tokenize(text){
+  // split into words; keep trailing punctuation attached for pause logic
+  return (text||"").replace(/\s+/g," ").trim().split(" ").filter(Boolean);
+}
+function buildQueueFromReport(i){
+  const parts=[];
+  if(i.title) parts.push(...tokenize(i.title), "•");      // bullet = section/heading pause marker
+  if(i.blurb) parts.push(...tokenize(i.blurb));
+  return parts;
+}
+function buildQueueFromSection(block){
+  const q=[];
+  block.items.forEach((i,n)=>{
+    q.push(...tokenize(i.title), "•");
+    if(i.blurb) q.push(...tokenize(i.blurb));
+    if(n<block.items.length-1) q.push("◆");               // diamond = between-report pause
+  });
+  return q;
+}
+
+// optimal recognition point: highlight a pivot letter and center it
+function renderWord(w){
+  if(w==="•"||w==="◆"){ rsvpWord.innerHTML='<span style="opacity:.35">◦</span>'; return; }
+  const clean=w;
+  const len=clean.length;
+  let orp = len<=1?0 : len<=5?1 : len<=9?2 : 3;
+  const before=clean.slice(0,orp), pivot=clean[orp]||"", after=clean.slice(orp+1);
+  rsvpWord.innerHTML=`${escapeHtml(before)}<span class="orp">${escapeHtml(pivot)}</span>${escapeHtml(after)}`;
+}
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function delayFor(w){
+  const base=60000/rsvp.wpm;
+  if(w==="•") return base*3;            // heading break
+  if(w==="◆") return base*5;            // between reports
+  let d=base;
+  if(/[,;:]$/.test(w)) d*=1.8;          // mild pause on clause punctuation
+  if(/[.!?]["')]?$/.test(w)) d*=2.4;    // longer on sentence end
+  if(w.length>=9) d*=1.4;               // long words get a touch more
+  return d;
+}
+
+function rsvpUpdateProgress(){
+  const total=rsvp.words.length;
+  $("#rsvpScrub").max=Math.max(0,total-1);
+  $("#rsvpScrub").value=rsvp.idx;
+  $("#rsvpProgress").textContent=`${Math.min(rsvp.idx+1,total)} / ${total}`;
+}
+function rsvpShow(){
+  if(rsvp.idx>=rsvp.words.length){ rsvpPause(); rsvp.idx=rsvp.words.length-1; renderWord("Done"); rsvpWord.textContent="✓ End"; return; }
+  renderWord(rsvp.words[rsvp.idx]);
+  rsvpUpdateProgress();
+}
+function rsvpTick(){
+  if(!rsvp.playing) return;
+  const w=rsvp.words[rsvp.idx];
+  rsvpShow();
+  rsvp.idx++;
+  if(rsvp.idx>rsvp.words.length){ rsvpPause(); return; }
+  rsvp.timer=setTimeout(rsvpTick, delayFor(w));
+}
+function rsvpPlay(){
+  if(rsvp.idx>=rsvp.words.length) rsvp.idx=0;
+  rsvp.playing=true; $("#rsvpPlay").textContent="⏸";
+  rsvpTick();
+}
+function rsvpPause(){
+  rsvp.playing=false; $("#rsvpPlay").textContent="▶";
+  clearTimeout(rsvp.timer);
+}
+function rsvpOpen(words, contextLabel, link){
+  rsvp.words=words; rsvp.idx=0; rsvp.link=link||null;
+  $("#rsvpContext").textContent=contextLabel||"";
+  $("#rsvpOpen").hidden=!link;
+  rsvpEl.hidden=false;
+  rsvpShow();
+  rsvpPlay();
+}
+function rsvpClose(){ rsvpPause(); rsvpEl.hidden=true; rsvp.words=[]; }
+
+$("#rsvpClose").addEventListener("click",rsvpClose);
+$("#rsvpPlay").addEventListener("click",()=>{ rsvp.playing?rsvpPause():rsvpPlay(); });
+$("#rsvpStepBack").addEventListener("click",()=>{ rsvpPause(); rsvp.idx=Math.max(0,rsvp.idx-1); rsvpShow(); });
+$("#rsvpStepFwd").addEventListener("click",()=>{ rsvpPause(); rsvp.idx=Math.min(rsvp.words.length-1,rsvp.idx+1); rsvpShow(); });
+$("#rsvpScrub").addEventListener("input",e=>{ rsvpPause(); rsvp.idx=+e.target.value; rsvpShow(); });
+$("#rsvpWpm").addEventListener("input",e=>{ rsvp.wpm=+e.target.value; $("#rsvpWpmVal").textContent=e.target.value; });
+$("#rsvpOpen").addEventListener("click",()=>{ if(rsvp.link) window.open(rsvp.link,"_blank","noopener"); });
+rsvpEl.addEventListener("click",e=>{ if(e.target===rsvpEl) rsvpClose(); });
+document.addEventListener("keydown",e=>{
+  if(rsvpEl.hidden) return;
+  if(e.code==="Space"){ e.preventDefault(); rsvp.playing?rsvpPause():rsvpPlay(); }
+  else if(e.code==="ArrowLeft"){ rsvpPause(); rsvp.idx=Math.max(0,rsvp.idx-1); rsvpShow(); }
+  else if(e.code==="ArrowRight"){ rsvpPause(); rsvp.idx=Math.min(rsvp.words.length-1,rsvp.idx+1); rsvpShow(); }
+  else if(e.code==="Escape"){ rsvpClose(); }
+});
 
 updateFavCount();
 setDateline(new Date());
