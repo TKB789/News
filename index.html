@@ -114,6 +114,12 @@
     background:var(--accent);color:var(--news);font-size:11px;line-height:16px;text-align:center;}
   .fav-note{font-family:'Spectral',serif;font-style:italic;font-size:16px;color:var(--ink-soft);
     padding:14px 0 22px;max-width:46ch;}
+  .clip-tools{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 6px;}
+  .clip-tool{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+    cursor:pointer;background:none;color:var(--ink);border:1px solid var(--ink);padding:9px 14px;}
+  .clip-tool:hover{background:var(--ink);color:var(--news);}
+  .clip-note{font-family:'Spectral',serif;font-style:italic;font-size:14px;color:var(--ink-soft);
+    margin:2px 0 18px;max-width:52ch;}
 
   /* ---- section nav bar ---- */
   .secnav{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
@@ -305,6 +311,43 @@ const PER_PAGE=25;     // reports per page
 const FAV_KEY='quietdesk_favs';
 let FAVS={}; try{ FAVS=JSON.parse(localStorage.getItem(FAV_KEY))||{}; }catch{}
 function saveFavs(){ try{ localStorage.setItem(FAV_KEY,JSON.stringify(FAVS)); }catch{} }
+
+// Ask the browser to keep our data persistent (prevents automatic eviction during
+// routine cache cleanup / low-disk). Does NOT stop a deliberate user "clear data".
+if(navigator.storage && navigator.storage.persist){
+  navigator.storage.persisted().then(p=>{ if(!p) navigator.storage.persist(); });
+}
+
+// Export clippings to a downloadable file (survives even a manual browser clear).
+function exportClippings(){
+  const data=JSON.stringify({type:"quietdesk-clippings",version:1,exported:Date.now(),clippings:FAVS},null,2);
+  const blob=new Blob([data],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  const stamp=new Date().toISOString().slice(0,10);
+  a.href=url; a.download=`quiet-desk-clippings-${stamp}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+// Import clippings from a previously exported file (merges with current).
+function importClippings(file){
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const parsed=JSON.parse(reader.result);
+      const incoming=parsed.clippings||parsed;   // tolerate raw map too
+      if(typeof incoming!=="object") throw new Error("bad format");
+      let added=0;
+      for(const [k,v] of Object.entries(incoming)){
+        if(!FAVS[k]){ FAVS[k]=v; added++; }
+      }
+      saveFavs(); updateFavCount();
+      if($("#favbtn").getAttribute("aria-pressed")==="true") render();
+      alert(`Imported ${added} new clipping${added===1?"":"s"}. Total: ${Object.keys(FAVS).length}.`);
+    }catch(e){ alert("Couldn't read that file — make sure it's a Quiet Desk clippings export."); }
+  };
+  reader.readAsText(file);
+}
 function favId(i){ return i.link||i.title; }
 function isFav(i){ return !!FAVS[favId(i)]; }
 function toggleFav(i){ const id=favId(i);
@@ -430,6 +473,20 @@ function renderFavorites(){
   head.innerHTML=`<span class="cat-name">Clippings</span>`;
   sec.appendChild(head);
   const ruleDiv=document.createElement("div"); ruleDiv.className="cat-rule"; sec.appendChild(ruleDiv);
+
+  // backup controls: export downloads a file; import restores from one
+  const tools=document.createElement("div"); tools.className="clip-tools";
+  const exp=document.createElement("button"); exp.className="clip-tool"; exp.textContent="⤓ Export clippings";
+  exp.addEventListener("click",exportClippings);
+  const imp=document.createElement("button"); imp.className="clip-tool"; imp.textContent="⤒ Import";
+  const fileInput=document.createElement("input"); fileInput.type="file"; fileInput.accept="application/json,.json"; fileInput.style.display="none";
+  fileInput.addEventListener("change",e=>{ if(e.target.files[0]) importClippings(e.target.files[0]); e.target.value=""; });
+  imp.addEventListener("click",()=>fileInput.click());
+  tools.appendChild(exp); tools.appendChild(imp); tools.appendChild(fileInput);
+  const note=document.createElement("p"); note.className="clip-note";
+  note.textContent="Clippings are saved on this device. Export to back them up or move them to another device — and before clearing your browser.";
+  sec.appendChild(tools); sec.appendChild(note);
+
   if(!favs.length){
     const p=document.createElement("p"); p.className="fav-note";
     p.textContent="No clippings yet. Tap the star beside any report to save it here.";
