@@ -32,7 +32,9 @@ const CATEGORIES = [
     "https://www.nature.com/nm.rss",
     "https://connect.biorxiv.org/biorxiv_xml.php?subject=all",
     "https://theconversation.com/us/science/articles.atom",
-    "https://aeon.co/feed.rss" ]},
+    "https://aeon.co/feed.rss",
+    "https://knowablemagazine.org/rss",
+    "https://nautil.us/feed/" ]},
   { name:"Good Developments", look:"progress, quietly", feeds:[
     "https://www.positive.news/feed/",
     "https://www.goodnewsnetwork.org/feed/",
@@ -45,7 +47,8 @@ const CATEGORIES = [
     "https://www.smithsonianmag.com/rss/arts-culture/",
     "https://www.theguardian.com/books/rss",
     "https://www.npr.org/rss/rss.php?id=1008",
-    "https://theconversation.com/us/arts/articles.atom" ]},
+    "https://theconversation.com/us/arts/articles.atom",
+    "https://www.themarginalian.org/feed/" ]},
   { name:"Climate & Environment", look:"both sides of the ledger", feeds:[
     "https://www.sciencedaily.com/rss/earth_climate.xml",
     "https://earth.org/feed/",
@@ -53,7 +56,8 @@ const CATEGORIES = [
     "https://grist.org/feed/",
     "https://insideclimatenews.org/feed/",
     "https://theconversation.com/us/environment/articles.atom",
-    "https://e360.yale.edu/feed.xml" ]},
+    "https://e360.yale.edu/feed.xml",
+    "https://hakaimagazine.com/feed/" ]},
   { name:"Global Health", look:"outbreaks & public health", feeds:[
     "https://www.who.int/feeds/entity/mediacentre/news/en/rss.xml",
     "https://www.sciencedaily.com/rss/health_medicine/infectious_diseases.xml",
@@ -76,7 +80,9 @@ const CATEGORIES = [
     "https://rss.dw.com/rdf/rss-en-world",
     "https://news.un.org/feed/subscribe/en/news/all/rss.xml",
     "https://theconversation.com/us/world/articles.atom",
-    "https://rss.csmonitor.com/feeds/world" ]},
+    "https://rss.csmonitor.com/feeds/world",
+    "https://www.propublica.org/feeds/propublica/main",
+    "https://theintercept.com/feed/?rss" ]},
   { name:"Economy & Markets", look:"the money underneath", feeds:[
     "https://feeds.bbci.co.uk/news/business/rss.xml",
     "https://www.theguardian.com/business/economics/rss",
@@ -93,6 +99,7 @@ const CATEGORIES = [
     "https://reliefweb.int/updates/rss.xml",
     "https://news.un.org/feed/subscribe/en/news/topic/humanitarian-aid/feed/rss.xml",
     "https://www.thenewhumanitarian.org/rss.xml",
+    "https://www.scidev.net/global/feed/",
     "https://www.devex.com/news.rss",
     "https://globalvoices.org/feed/" ]},
   { name:"Regional Spotlights", look:"under-covered corners", feeds:[
