@@ -130,6 +130,15 @@ function decode(s){
     .replace(/&nbsp;/g,' ').replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(+n))
     .replace(/\s+/g,' ').trim();
 }
+function cleanBlurb(s){
+  let t=decode(s);
+  // strip publisher "read more" tails and trailing ellipses
+  t=t.replace(/\s*(\[\s*&#8230;\s*\]|\[\s*…\s*\])\s*$/,'');         // [།] / [...]
+  t=t.replace(/\s*(read more|continue reading|read full story|the post .* appeared first on .*)\s*$/i,'');
+  t=t.replace(/\s*(\.{2,}|\u2026)\s*$/,'');                         // trailing ... or … only (keep single .)
+  t=t.replace(/\s*[–—-]\s*$/,'');                                    // dangling dash
+  return t.trim();
+}
 function tag(block, name){
   // grabs <name ...>...</name> (first match), CDATA-aware
   const re = new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${name}>`, 'i');
@@ -152,7 +161,7 @@ function parseFeed(xml, feedUrl){
     return {
       title: decode(tag(b,'title')),
       link,
-      blurb: decode(tag(b,'description') || tag(b,'summary') || tag(b,'content:encoded') || tag(b,'content')),
+      blurb: cleanBlurb(tag(b,'description') || tag(b,'summary') || tag(b,'content:encoded') || tag(b,'content')),
       date: iso,
       src: domain(link) || domain(feedUrl)
     };
