@@ -186,8 +186,13 @@
   .rsvp-stage{position:relative;padding:30px 0;margin-bottom:8px;}
   .rsvp-guide{height:14px;width:2px;background:var(--accent);margin:0 auto;}
   .rsvp-word{font-family:'Spectral',serif;font-size:clamp(34px,9vw,54px);line-height:1.1;
-    min-height:1.2em;padding:10px 0;letter-spacing:.01em;white-space:nowrap;}
-  .rsvp-word .orp{color:#e8714a;}   /* optimal recognition point letter */
+    min-height:1.2em;padding:10px 0;letter-spacing:.01em;white-space:nowrap;
+    position:relative;width:100%;}
+  /* three-span layout: pivot pinned to centre so the eye never moves */
+  .rsvp-word .rsvp-piv{position:absolute;left:calc(50% - 0.5ch);top:10px;width:1ch;text-align:center;color:#d32f2f;}
+  .rsvp-word .rsvp-pre{position:absolute;right:calc(50% + 0.5ch);top:10px;text-align:right;white-space:pre;}
+  .rsvp-word .rsvp-post{position:absolute;left:calc(50% + 0.5ch);top:10px;text-align:left;white-space:pre;}
+  .rsvp-word.marker{color:var(--ink-soft);position:static;}
   .rsvp-scrub{width:100%;margin:8px 0 4px;accent-color:var(--accent);}
   .rsvp-progress{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.1em;color:#b8a98c;margin-bottom:18px;}
   .rsvp-controls{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:20px;}
@@ -690,8 +695,19 @@ const rsvp={ words:[], meta:[], total:1, idx:0, playing:false, timer:null, wpm:5
 const rsvpEl=$("#rsvp"), rsvpWord=$("#rsvpWord");
 
 function tokenize(text){
-  // split into words; keep trailing punctuation attached for pause logic
-  return (text||"").replace(/\s+/g," ").trim().split(" ").filter(Boolean);
+  // split on whitespace, keep trailing punctuation attached; break very long words
+  const raw=(text||"").replace(/\s+/g," ").trim().split(" ").filter(Boolean);
+  const out=[];
+  for(const w of raw){
+    if(w.length<=13){ out.push(w); continue; }
+    // break >13-char words into ~12-char chunks; mark non-final chunks with a hyphen flag
+    for(let p=0;p<w.length;p+=12){
+      const chunk=w.slice(p,p+12);
+      const isLast=p+12>=w.length;
+      out.push(isLast ? chunk : chunk+"\u00AD");   // soft-hyphen marker = "more to come, no pause"
+    }
+  }
+  return out;
 }
 function buildQueueFromReport(i){
   const words=[], meta=[];
@@ -712,25 +728,39 @@ function buildQueueFromSection(block){
   return {words, meta, total};
 }
 
-// optimal recognition point: highlight a pivot letter and center it
+// optimal recognition point: pivot index by word length; render three spans, pivot pinned centre
+function orpIndex(len){
+  if(len<=1) return 0;
+  if(len<=5) return 1;
+  if(len<=9) return 2;
+  if(len<=13) return 3;
+  return 4;
+}
 function renderWord(w){
-  if(w==="•"||w==="◆"){ rsvpWord.innerHTML='<span style="opacity:.35">◦</span>'; return; }
-  const clean=w;
-  const len=clean.length;
-  let orp = len<=1?0 : len<=5?1 : len<=9?2 : 3;
-  const before=clean.slice(0,orp), pivot=clean[orp]||"", after=clean.slice(orp+1);
-  rsvpWord.innerHTML=`${escapeHtml(before)}<span class="orp">${escapeHtml(pivot)}</span>${escapeHtml(after)}`;
+  if(w==="•"||w==="◆"){ rsvpWord.className="rsvp-word marker"; rsvpWord.innerHTML='◦'; return; }
+  rsvpWord.className="rsvp-word";
+  // strip soft-hyphen marker for ORP math but show it as a trailing hyphen
+  const isChunk = w.endsWith("\u00AD");
+  const shown = isChunk ? w.slice(0,-1)+"-" : w;
+  const core = isChunk ? w.slice(0,-1) : w;
+  const i = orpIndex(core.length);
+  const pre = escapeHtml(shown.slice(0,i));
+  const piv = escapeHtml(shown[i]||"");
+  const post= escapeHtml(shown.slice(i+1));
+  rsvpWord.innerHTML=`<span class="rsvp-pre">${pre}</span><span class="rsvp-piv">${piv}</span><span class="rsvp-post">${post}</span>`;
 }
 function escapeHtml(s){ return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
 function delayFor(w){
   const base=60000/rsvp.wpm;
-  if(w==="•") return base*3;            // heading break
-  if(w==="◆") return base*5;            // between reports
+  if(w==="•") return base*2.5;                 // paragraph / heading break
+  if(w==="◆") return base*2.5;                 // between reports (paragraph-level)
+  if(w.endsWith("\u00AD")) return base*0.9;    // mid-word chunk: flow quickly, no real pause
   let d=base;
-  if(/[,;:]$/.test(w)) d*=1.8;          // mild pause on clause punctuation
-  if(/[.!?]["')]?$/.test(w)) d*=2.4;    // longer on sentence end
-  if(w.length>=9) d*=1.4;               // long words get a touch more
+  const len=w.replace(/[^A-Za-z0-9]/g,"").length;
+  if(len>=8) d*=1.25;                           // longer words held slightly longer
+  if(/[,;:]["')\]]?$/.test(w)) d*=1.5;          // comma / clause punctuation ~1.5x
+  if(/[.!?]["')\]]?$/.test(w)) d*=2.0;          // sentence-ending punctuation ~2x
   return d;
 }
 
