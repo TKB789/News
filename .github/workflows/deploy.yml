@@ -6,6 +6,9 @@ on:
     branches: [main]
   # Allow manual runs from the Actions tab
   workflow_dispatch:
+  workflow_run:
+    workflows: ["captue"]
+    types: [completed]
 
 # Permissions needed for the GITHUB_TOKEN to deploy to Pages
 permissions:
