@@ -396,13 +396,46 @@ async function loadIndex(){
   }
 }
 
+// ---- time-sensitive strip: hoist urgent items into a synthetic first section ----
+// Detected by keyword (disasters, alerts, catchable sky events) plus everything
+// from Weather & Civil Alerts. Items also stay in their home section.
+const URGENT_PATTERNS = [
+  /\b(earthquake|tsunami|volcan|erupt|hurricane|typhoon|cyclone|wildfire|landslide|flood(s|ing)?)\b/i,
+  /\b(evacuat|state of emergency|emergency declared|(alert|warning) (issued|in effect))\b/i,
+  /\b(meteor shower|lunar eclipse|solar eclipse|aurora|northern lights|supermoon)\b/i,
+  /\b(visible|peaks?|look up) (tonight|this week(end)?|this evening)\b/i,
+  /\brecall(ed|s)?\b.*\b(safety|contamin|listeria|salmonella|e\.? ?coli)\b/i,
+];
+const ALWAYS_URGENT_CATS = new Set(["Weather & Civil Alerts"]);
+const NOT_URGENT = /\b(histor(y|ic|ical)|anniversary|years? (ago|later|on)|study|research(ers)?|analysis|retrospective|looks? back)\b/i;
+function isUrgent(it){
+  if(/^green\b/i.test(it.title||'')) return false;   // GDACS low-severity tier
+  if(ALWAYS_URGENT_CATS.has(it.cat)) return true;
+  const text = (it.title||'') + ' ' + (it.blurb||'');
+  if(NOT_URGENT.test(it.title||'')) return false;
+  return URGENT_PATTERNS.some(re => re.test(text));
+}
+const LIFE_SAFETY = /\b(evacuat|tsunami|state of emergency|emergency declared|(alert|warning) (issued|in effect)|death toll|landfall|erupt)\b/i;
+function severity(it){
+  const text = (it.title||'') + ' ' + (it.blurb||'');
+  return LIFE_SAFETY.test(text) ? 0 : 1;   // 0 sorts first
+}
+function addUrgentSection(day){
+  if(day._urgentDone) return day;
+  day._urgentDone = true;
+  const urgent = day.cats.flatMap(c => c.items).filter(isUrgent);
+  urgent.sort((a,b) => severity(a) - severity(b) || new Date(b.date||0) - new Date(a.date||0));
+  if(urgent.length) day.cats.unshift({ name:"⏱ Time-Sensitive", look:"happening now", items:urgent });
+  return day;
+}
+
 async function getDay(k){
   if(CACHE[k]) return CACHE[k];
   // bust cache only for today's file (it changes through the day); older days are immutable
   const bust = isToday(k) ? '?t='+Date.now() : '';
   const res=await fetch(`${DATA}${k}.json${bust}`,{cache:'no-store'});
   if(!res.ok) throw new Error(res.status);
-  const j=await res.json(); CACHE[k]=j; return j;
+  const j=await res.json(); CACHE[k]=addUrgentSection(j); return CACHE[k];
 }
 
 function buildTabs(){
