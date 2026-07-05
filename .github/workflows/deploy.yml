@@ -6,9 +6,6 @@ on:
     branches: [main]
   # Allow manual runs from the Actions tab
   workflow_dispatch:
-  workflow_run:
-    workflows: ["Capture daily news"]
-    types: [completed]
 
 # Permissions needed for the GITHUB_TOKEN to deploy to Pages
 permissions:
@@ -31,14 +28,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Assemble site
+        # Copy only what the site needs into a clean folder,
+        # so .git and other repo files never end up in the artifact
+        run: |
+          mkdir -p site
+          cp index.html site/
+          [ -d assets ] && cp -r assets site/ || true
+          [ -d data ]   && cp -r data site/   || true
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload the whole repo root (it's just index.html + assets)
-          path: "."
+          path: "site"
 
       - name: Deploy to GitHub Pages
         id: deployment
