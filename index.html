@@ -86,6 +86,7 @@
   .meta{font-family:'Oswald',sans-serif;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
     color:var(--ink-soft);margin-bottom:5px;}
   .meta .src{color:var(--accent);font-weight:600;}
+  .meta .corrob{color:#3d7a4a;font-weight:600;white-space:nowrap;}
   .art-num{display:inline-block;background:var(--ink);color:var(--news);font-weight:600;
     min-width:20px;padding:1px 6px;margin-right:8px;border-radius:2px;
     font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.04em;}
@@ -461,7 +462,7 @@ function articleNode(i,q,isLead,num){
     if($("#favbtn").getAttribute("aria-pressed")==="true" && !isFav(i)) art.remove(); });
   const body=document.createElement("div"); body.className="body";
   const numTag = num?`<span class="art-num">${num}</span>`:"";
-  body.innerHTML=`<div class="meta">${numTag}<span class="src">${i.src||"source"}</span>${i.date?" · "+timeAgo(i.date):""}${i.cat?' · '+i.cat:''}</div>
+  body.innerHTML=`<div class="meta">${numTag}<span class="src">${i.src||"source"}</span>${i.date?" · "+timeAgo(i.date):""}${i.cat?' · '+i.cat:''}${i.srcs>1?` · <span class="corrob" title="Similar story found on ${i.srcs} outlets">✓ ${i.srcs} sources</span>`:''}</div>
     <h3><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a></h3>
     ${i.blurb?`<p class="blurb">${i.blurb}</p>`:""}`;
   const read=document.createElement("button"); read.className="mini-read"; read.textContent="▶ Speed-read";
