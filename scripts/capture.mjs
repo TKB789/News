@@ -19,6 +19,21 @@ function excluded(it){
   return EXCLUDE.some(re => re.test(it.title || '') || re.test(it.blurb || ''));
 }
 
+// ---- per-category blocklist: subjects to keep OUT of specific sections ----
+// (they still appear in other categories where they're on-topic)
+const CAT_EXCLUDE = {
+  "Progress & Solutions": [
+    /jeff bezos/i,
+    /\bamazon\b(?!\s+(rain\s?forest|river|basin|jungle))/i,  // company, not the rainforest
+  ],
+  // "Arts & Culture": [ /.../i ],   // add more sections/patterns as needed
+};
+function catExcluded(catName, it){
+  const list = CAT_EXCLUDE[catName];
+  if(!list) return false;
+  return list.some(re => re.test(it.title || '') || re.test(it.blurb || ''));
+}
+
 // ---- corroboration: cluster near-identical headlines across outlets ----
 // Items get a `srcs` count (distinct outlets reporting the same story).
 // Categories with minSrc > 1 drop stories below that count. Items dropped
@@ -72,9 +87,14 @@ const CATEGORIES = [
     "https://nautil.us/feed/" ]},
   { name:"Progress & Solutions", look:"solutions journalism", feeds:[
     "https://www.positive.news/feed/",
-    "https://www.allsides.com/rss/news",
     "https://reasonstobecheerful.world/feed/",
-    "https://www.yesmagazine.org/feed" ]},
+    "https://www.yesmagazine.org/feed",
+    "https://fixthenews.com/rss/",
+    "https://ourworldindata.org/atom.xml",
+    "https://www.vox.com/rss/future-perfect/index.xml",
+    "https://squirrel-news.net/feed/",
+    "https://www.optimistdaily.com/feed/",
+    "https://worksinprogress.co/feed/" ]},
   { name:"Arts & Culture", look:"human achievement", feeds:[
     "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml",
     "https://www.theguardian.com/culture/rss",
@@ -107,6 +127,7 @@ const CATEGORIES = [
     "https://www.technologyreview.com/feed/",
     "https://restofworld.org/feed/latest/" ]},
   { name:"World & Conflict", minSrc:2, look:"the harder current events", feeds:[
+    "https://www.allsides.com/rss/news",
     "https://feeds.bbci.co.uk/news/world/rss.xml",
     "https://www.aljazeera.com/xml/rss/all.xml",
     "https://www.npr.org/rss/rss.php?id=1004",
@@ -117,13 +138,11 @@ const CATEGORIES = [
     "https://rss.csmonitor.com/feeds/world",
     "https://www.propublica.org/feeds/propublica/main",
     "https://theintercept.com/feed/?rss" ]},
-  { name:"Economy & Markets", look:"the money underneath", feeds:[
+  { name:"Business & Economy", look:"companies, markets, the money underneath", feeds:[
     "https://feeds.bbci.co.uk/news/business/rss.xml",
     "https://www.theguardian.com/business/economics/rss",
-    "https://feeds.a.dj.com/rss/RSSMarketsMain.xml" ]},
-  { name:"Business & Finance", look:"companies, deals, money", feeds:[
-    "https://feeds.bbci.co.uk/news/business/rss.xml",
     "https://www.theguardian.com/uk/business/rss",
+    "https://feeds.a.dj.com/rss/RSSMarketsMain.xml",
     "https://feeds.npr.org/1006/rss.xml" ]},
   { name:"Sports", look:"results and the human feats", feeds:[
     "https://feeds.bbci.co.uk/sport/rss.xml",
@@ -138,6 +157,7 @@ const CATEGORIES = [
     "https://globalvoices.org/feed/" ]},
   { name:"Regional Spotlights", look:"under-covered corners", feeds:[
     "https://www.mercopress.com/rss/",
+    "https://thebetterindia.com/feed/",
     "https://www.scmp.com/rss/91/feed",
     "https://www.africanews.com/feed/rss",
     "https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf",
@@ -236,7 +256,7 @@ function scrubSnapshots(){
       let removed = 0;
       for(const c of day.cats){
         const n = c.items.length;
-        c.items = c.items.filter(i => !excluded(i));
+        c.items = c.items.filter(i => !excluded(i) && !catExcluded(c.name, i));
         removed += n - c.items.length;
       }
       if(removed){
@@ -272,7 +292,8 @@ async function main(){
       if(r.status==='fulfilled'){ ok++;
         for(const it of r.value){
           const id = it.link||it.title;
-          if(excluded(it)) continue;          // blocklisted topic
+          if(excluded(it)) continue;               // blocklisted topic (global)
+          if(catExcluded(cat.name, it)) continue;  // blocklisted for this section
           if(before.has(id)) continue;        // seen an earlier day → not new
           if(localSeen.has(id)) continue;     // already in today's snapshot
           localSeen.add(id); items.push(it);
