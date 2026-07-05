@@ -6,6 +6,41 @@ import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, rmSync
 const DAYS_KEPT = 60;     // how many daily snapshots to retain in the repo
 const PER_CAT   = 0;      // max NEW items kept per category per day (0 = no cap, keep all)
 
+// ---- topic blocklist: items whose title or blurb match are never kept ----
+// (also scrubbed retroactively from existing snapshots on each run)
+const EXCLUDE = [
+  /\bastrolog/i,          // astrology, astrological, astrologer
+  /\bhoroscope/i,
+  /\bzodiac\b/i,
+  /free will astrology/i,
+  /\btarot\b/i,
+];
+function excluded(it){
+  return EXCLUDE.some(re => re.test(it.title || '') || re.test(it.blurb || ''));
+}
+
+// ---- corroboration: cluster near-identical headlines across outlets ----
+// Items get a `srcs` count (distinct outlets reporting the same story).
+// Categories with minSrc > 1 drop stories below that count. Items dropped
+// today are re-evaluated on later runs, so a story that gains a second
+// outlet reappears automatically.
+const SIM_RATIO  = 0.5;   // fraction of the shorter title's keywords that must match
+const SIM_SHARED = 3;     // and at least this many keywords in common
+const STOPWORDS = new Set(('the a an and or of to in on for with at by from as is are was were be been '+
+  'it its this that these those after amid over under new says say said will has have had not but what '+
+  'how why when where who more most than then his her their our your you can could may might just about').split(' '));
+function keywords(title){
+  return new Set((title||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ')
+    .split(/\s+/).filter(w => w.length > 2 && !STOPWORDS.has(w))
+    .map(w => w.replace(/([^s])s$/, '$1')));   // light stemming: cuts→cut, rates→rate
+}
+function similar(a,b){
+  const [small,big] = a.size <= b.size ? [a,b] : [b,a];
+  if(small.size === 0) return false;
+  let shared = 0; for(const w of small) if(big.has(w)) shared++;
+  return shared >= SIM_SHARED && shared / small.size >= SIM_RATIO;
+}
+
 // ---- your sources, grouped by category (edit freely) ----
 const CATEGORIES = [
   { name:"Sky & Space", look:"events you can still catch", feeds:[
@@ -71,7 +106,7 @@ const CATEGORIES = [
     "https://feeds.bbci.co.uk/news/technology/rss.xml",
     "https://www.technologyreview.com/feed/",
     "https://restofworld.org/feed/latest/" ]},
-  { name:"World & Conflict", look:"the harder current events", feeds:[
+  { name:"World & Conflict", minSrc:2, look:"the harder current events", feeds:[
     "https://feeds.bbci.co.uk/news/world/rss.xml",
     "https://www.aljazeera.com/xml/rss/all.xml",
     "https://www.npr.org/rss/rss.php?id=1004",
@@ -191,8 +226,30 @@ function loadEarlierLinks(tk){
   return set;
 }
 
+function scrubSnapshots(){
+  // retroactively remove blocklisted items from already-captured days
+  if(!existsSync(DATA_DIR)) return;
+  for(const f of readdirSync(DATA_DIR)){
+    if(!/^\d{4}-\d{2}-\d{2}\.json$/.test(f)) continue;
+    try{
+      const day = JSON.parse(readFileSync(`${DATA_DIR}/${f}`,'utf8'));
+      let removed = 0;
+      for(const c of day.cats){
+        const n = c.items.length;
+        c.items = c.items.filter(i => !excluded(i));
+        removed += n - c.items.length;
+      }
+      if(removed){
+        writeFileSync(`${DATA_DIR}/${f}`, JSON.stringify(day, null, 0));
+        console.log(`Scrubbed ${removed} blocklisted item(s) from ${f}`);
+      }
+    }catch{}
+  }
+}
+
 async function main(){
   if(!existsSync(DATA_DIR)) mkdirSync(DATA_DIR,{recursive:true});
+  scrubSnapshots();
   const tk = todayKey();
   const before = loadEarlierLinks(tk);
 
@@ -215,6 +272,7 @@ async function main(){
       if(r.status==='fulfilled'){ ok++;
         for(const it of r.value){
           const id = it.link||it.title;
+          if(excluded(it)) continue;          // blocklisted topic
           if(before.has(id)) continue;        // seen an earlier day → not new
           if(localSeen.has(id)) continue;     // already in today's snapshot
           localSeen.add(id); items.push(it);
@@ -224,6 +282,43 @@ async function main(){
     items.sort((a,b)=> new Date(b.date||0) - new Date(a.date||0));
     const kept = PER_CAT > 0 ? items.slice(0,PER_CAT) : items;
     cats.push({ name:cat.name, look:cat.look, items: kept.map(i=>({...i,cat:cat.name})) });
+  }
+
+  // ---- corroboration pass: annotate every item with a distinct-source count ----
+  {
+    const all = cats.flatMap(c => c.items);
+    const keys = all.map(i => keywords(i.title));
+    // inverted index so we only compare pairs that share at least one keyword
+    const byWord = new Map();
+    keys.forEach((k, idx) => { for(const w of k){ if(!byWord.has(w)) byWord.set(w, []); byWord.get(w).push(idx); } });
+    const parent = all.map((_, i) => i);
+    const find = x => parent[x] === x ? x : (parent[x] = find(parent[x]));
+    const union = (a,b) => { a = find(a); b = find(b); if(a !== b) parent[a] = b; };
+    const tried = new Set();
+    keys.forEach((k, a) => {
+      for(const w of k) for(const b of byWord.get(w)){
+        if(b <= a) continue;
+        const pair = a * all.length + b;
+        if(tried.has(pair)) continue; tried.add(pair);
+        if(all[a].src !== all[b].src && similar(keys[a], keys[b])) union(a, b);
+      }
+    });
+    const clusterSrcs = new Map();
+    all.forEach((it, i) => {
+      const r = find(i);
+      if(!clusterSrcs.has(r)) clusterSrcs.set(r, new Set());
+      clusterSrcs.get(r).add(it.src);
+    });
+    all.forEach((it, i) => { it.srcs = clusterSrcs.get(find(i)).size; });
+    // per-category minimum-source filter
+    for(const c of cats){
+      const min = CATEGORIES.find(k => k.name === c.name)?.minSrc || 1;
+      if(min > 1){
+        const n = c.items.length;
+        c.items = c.items.filter(i => i.srcs >= min);
+        if(n - c.items.length) console.log(`${c.name}: held back ${n - c.items.length} single-source item(s).`);
+      }
+    }
   }
 
   writeFileSync(`${DATA_DIR}/${tk}.json`, JSON.stringify({ date:tk, built:Date.now(), cats }, null, 0));
