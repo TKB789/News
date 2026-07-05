@@ -72,7 +72,7 @@ const CATEGORIES = [
     "https://nautil.us/feed/" ]},
   { name:"Progress & Solutions", look:"solutions journalism", feeds:[
     "https://www.positive.news/feed/",
-    "https://www.goodnewsnetwork.org/feed/",
+    "https://www.allsides.com/rss/news",
     "https://reasonstobecheerful.world/feed/",
     "https://www.yesmagazine.org/feed" ]},
   { name:"Arts & Culture", look:"human achievement", feeds:[
