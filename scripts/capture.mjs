@@ -14,6 +14,7 @@ const EXCLUDE = [
   /\bzodiac\b/i,
   /free will astrology/i,
   /\btarot\b/i,
+  /^green (notification|earthquake|forest fire|flood|cyclone|volcano|drought|tsunami|landslide)\b/i,   // GDACS lowest-severity tier
 ];
 function excluded(it){
   return EXCLUDE.some(re => re.test(it.title || '') || re.test(it.blurb || ''));
