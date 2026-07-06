@@ -589,7 +589,8 @@ function renderMenu(day,q){
   }
   feedEl.appendChild(list);
   const total=day.cats.reduce((s,c)=>s+c.items.length,0);
-  $("#count").textContent = total+" report"+(total===1?"":"s")+" · "+(isToday(SELECTED)?"today's edition":keyToDate(SELECTED).toLocaleDateString());
+  setDateline(keyToDate(SELECTED));
+  $("#count").textContent = total+" report"+(total===1?"":"s")+(isToday(SELECTED)?" · today's edition":"");
 }
 
 function renderSection(day){
@@ -639,7 +640,8 @@ function renderSection(day){
 
   if(totalPages>1) feedEl.appendChild(buildPager(totalPages, block.name));
 
-  $("#count").textContent = (isToday(SELECTED)?"today's edition":keyToDate(SELECTED).toLocaleDateString())
+  setDateline(keyToDate(SELECTED));
+  $("#count").textContent = (isToday(SELECTED)?"today's edition":"archive")
     + (totalPages>1?` · page ${PAGE+1} of ${totalPages}`:"");
 }
 
