@@ -255,9 +255,16 @@ function scrubSnapshots(){
     try{
       const day = JSON.parse(readFileSync(`${DATA_DIR}/${f}`,'utf8'));
       let removed = 0;
+      const seen = new Set();
       for(const c of day.cats){
         const n = c.items.length;
-        c.items = c.items.filter(i => !excluded(i) && !catExcluded(c.name, i));
+        c.items = c.items.filter(i => {
+          if(excluded(i) || catExcluded(c.name, i)) return false;
+          const id = i.link || i.title;
+          if(seen.has(id)) return false;   // duplicate from another category
+          seen.add(id);
+          return true;
+        });
         removed += n - c.items.length;
       }
       if(removed){
@@ -287,7 +294,9 @@ async function main(){
   for(const cat of CATEGORIES){
     const prior = existing.cats.find(c=>c.name===cat.name);
     const items = prior ? [...prior.items] : [];
-    const localSeen = new Set(items.map(i=>i.link||i.title));
+    // dedupe across ALL categories, not just this one (first category wins)
+    const localSeen = todaySeen;
+    items.forEach(i=>localSeen.add(i.link||i.title));
     const results = await Promise.allSettled(cat.feeds.map(fetchFeed));
     for(const r of results){
       if(r.status==='fulfilled'){ ok++;
