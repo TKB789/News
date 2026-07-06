@@ -423,8 +423,11 @@ function severity(it){
 function addUrgentSection(day){
   if(day._urgentDone) return day;
   day._urgentDone = true;
+  // rank every section: most-corroborated first, then newest
+  for(const c of day.cats)
+    c.items.sort((a,b) => (b.srcs||1) - (a.srcs||1) || new Date(b.date||0) - new Date(a.date||0));
   const urgent = day.cats.flatMap(c => c.items).filter(isUrgent);
-  urgent.sort((a,b) => severity(a) - severity(b) || new Date(b.date||0) - new Date(a.date||0));
+  urgent.sort((a,b) => severity(a) - severity(b) || (b.srcs||1) - (a.srcs||1) || new Date(b.date||0) - new Date(a.date||0));
   if(urgent.length) day.cats.unshift({ name:"⏱ Time-Sensitive", look:"happening now", items:urgent });
   return day;
 }
