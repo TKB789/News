@@ -1,9 +1,10 @@
 name: Deploy to GitHub Pages
 
 on:
-  # Run on every push to the main branch
-  push:
-    branches: [main]
+  # Run after the "Capture daily news" workflow finishes
+  workflow_run:
+    workflows: ["Capture daily news"]
+    types: [completed]
   # Allow manual runs from the Actions tab
   workflow_dispatch:
 
@@ -20,6 +21,8 @@ concurrency:
 
 jobs:
   deploy:
+    # Only deploy if the upstream workflow succeeded (skipped for manual runs)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
