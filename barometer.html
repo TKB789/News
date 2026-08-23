@@ -128,7 +128,7 @@
   .cat-rule{border-bottom:2px solid var(--rule);margin-bottom:6px;}
 
   .cols{display:grid;grid-template-columns:1.05fr 1fr;gap:0 34px;}
-  .col h3.deptsub{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.16em;
+  h3.deptsub{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.16em;
     text-transform:uppercase;color:var(--ink-soft);margin:14px 0 6px;
     border-bottom:1px solid var(--hair);padding-bottom:5px;
     display:flex;justify-content:space-between;gap:10px;}
@@ -156,9 +156,29 @@
     line-height:1.55;padding:10px 0;}
   .note a{color:var(--accent);}
   .note.fail{color:var(--accent);font-style:normal;font-size:14px;}
-  .sect-tally{display:flex;justify-content:space-between;gap:12px;
-    font-family:'Spectral',serif;font-size:15px;padding:7px 0;border-bottom:1px solid var(--hair);}
-  .sect-tally .n{font-family:'Oswald',sans-serif;font-size:12px;color:var(--accent);letter-spacing:.06em;}
+  .sect{border-bottom:1px solid var(--hair);}
+  .sect > summary{display:flex;align-items:baseline;gap:12px;cursor:pointer;
+    font-family:'Spectral',serif;font-size:15px;padding:9px 2px;list-style:none;}
+  .sect > summary::-webkit-details-marker{display:none;}
+  .sect > summary::marker{content:"";}
+  .sect > summary:hover{background:var(--news-deep);}
+  .sect > summary .nm{flex:1;}
+  .sect > summary .n{font-family:'Oswald',sans-serif;font-size:12px;
+    color:var(--accent);letter-spacing:.06em;}
+  .sect > summary .mk{font-family:'Oswald',sans-serif;font-size:13px;
+    color:var(--ink-soft);width:14px;text-align:center;}
+  .sect[open] > summary .mk::before{content:"–";}
+  .sect:not([open]) > summary .mk::before{content:"+";}
+  .art-list{list-style:none;margin:0 0 12px;padding:0;}
+  .art-list li{padding:9px 0 9px 14px;border-top:1px dotted var(--hair);}
+  .art-list .hl{font-family:'Playfair Display',serif;font-weight:700;font-size:17px;
+    line-height:1.2;color:var(--ink);text-decoration:none;display:block;}
+  a.hl:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
+  .art-meta{font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-soft);margin-top:5px;}
+  .art-meta .src{color:var(--accent);font-weight:600;}
+  .art-more{font-family:'Spectral',serif;font-style:italic;font-size:14px;
+    color:var(--ink-soft);padding:9px 0 9px 14px;border-top:1px dotted var(--hair);}
 
   /* ---- sources ---- */
   .slinks{list-style:none;margin:0;padding:0;
@@ -347,7 +367,11 @@ async function loadArchive(){
           const flat = [];
           for(const c of snap.cats||[])
             for(const it of c.items||[])
-              flat.push({cat:c.name, text:((it.title||"")+" "+(it.blurb||"")).toLowerCase()});
+              flat.push({
+                cat:c.name,
+                text:((it.title||"")+" "+(it.blurb||"")).toLowerCase(),
+                title:it.title||"", link:it.link||"", src:it.src||"", day:d
+              });
           byDay.set(d, flat);
         }catch{ byDay.set(d, []); }
       }
@@ -374,11 +398,14 @@ async function fetchArchive(term){
     for(const it of byDay.get(d)||[]){
       if(re.test(it.text)){
         n++;
-        bySection.set(it.cat,(bySection.get(it.cat)||0)+1);
+        if(!bySection.has(it.cat)) bySection.set(it.cat,[]);
+        bySection.get(it.cat).push(it);
       }
     }
     pts.push({d, v:n});
   }
+  // newest edition first within each section
+  for(const arr of bySection.values()) arr.sort((a,b)=> a.day<b.day ? 1 : -1);
   return {pts, bySection};
 }
 
@@ -716,15 +743,31 @@ function renderSections(){
       : 'Plot a term to see which sections of this paper carried it.')+'</p>';
     return;
   }
+  const SHOWN=25;
   host.innerHTML="";
   for(const s of withSecs){
-    const rows=[...s.sections.entries()].sort((a,b)=>b[1]-a[1]);
-    const total=rows.reduce((a,r)=>a+r[1],0);
+    const rows=[...s.sections.entries()].sort((a,b)=>b[1].length-a[1].length);
+    const total=rows.reduce((a,r)=>a+r[1].length,0);
     const box=document.createElement("div");
-    box.innerHTML='<h3 class="deptsub"><span>“'+esc(s.term)+'”</span><span>'
-      +total+' report'+(total===1?"":"s")+' · 60 days</span></h3>'
-      + rows.map(([n,c])=>'<div class="sect-tally"><span>'+esc(n)
-        +'</span><span class="n">'+c+'</span></div>').join("");
+    let html='<h3 class="deptsub"><span>“'+esc(s.term)+'”</span><span>'
+      +total+' report'+(total===1?"":"s")+' · 60 days</span></h3>';
+    for(const [name,items] of rows){
+      const head=items.slice(0,SHOWN).map(it=>{
+        const meta='<div class="art-meta">'+esc(it.day)
+          +(it.src?' · <span class="src">'+esc(it.src)+'</span>':"")+'</div>';
+        return '<li>'+(it.link
+          ? '<a class="hl" href="'+esc(it.link)+'" target="_blank" rel="noopener">'
+            +esc(it.title)+'</a>'
+          : '<span class="hl">'+esc(it.title)+'</span>')+meta+'</li>';
+      }).join("");
+      const rest=items.length-SHOWN;
+      html+='<details class="sect"><summary><span class="nm">'+esc(name)
+        +'</span><span class="n">'+items.length+'</span><span class="mk"></span></summary>'
+        +'<ul class="art-list">'+head
+        +(rest>0?'<li class="art-more">and '+rest+' more in earlier editions.</li>':"")
+        +'</ul></details>';
+    }
+    box.innerHTML=html;
     host.appendChild(box);
   }
 }
