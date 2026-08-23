@@ -17,11 +17,29 @@ const TIMEOUT_MS = 45000;
 
 // Terms kept permanently on file. Add here, or to data/trends/terms.txt.
 const TERMS = [
-  'hurricane', 'tropical storm', 'storm surge', 'typhoon', 'cyclone',
-  'flooding', 'wildfire', 'heat wave', 'earthquake', 'drought', 'landslide',
+  // storms & weather
+  'hurricane', 'tropical storm', 'storm surge', 'typhoon', 'cyclone', 'tornado',
+  'flooding', 'heat wave', 'blizzard',
+  // earth & climate
+  'wildfire', 'drought', 'earthquake', 'landslide', 'volcano',
+  'sea level rise', 'deforestation', 'air pollution',
+  // health
   'outbreak', 'epidemic', 'measles', 'dengue', 'cholera', 'malaria',
-  'H5N1', 'avian influenza', 'norovirus', 'polio', 'mpox', 'tuberculosis',
-  'famine', 'displacement', 'evacuation'
+  'H5N1', 'avian influenza', 'polio', 'mpox', 'tuberculosis', 'antibiotic resistance',
+  // war & security
+  'war', 'ceasefire', 'airstrike', 'sanctions', 'refugees', 'coup',
+  'terrorism', 'nuclear weapons', 'peace talks',
+  // money & work
+  'inflation', 'recession', 'unemployment', 'interest rates', 'tariffs',
+  'layoffs', 'supply chain', 'food prices', 'debt crisis',
+  // people & power
+  'election', 'protest', 'strike', 'immigration', 'corruption',
+  'censorship', 'press freedom', 'human rights',
+  // technology
+  'artificial intelligence', 'cyberattack', 'data breach', 'semiconductors',
+  'surveillance', 'misinformation',
+  // hardship
+  'famine', 'displacement', 'evacuation', 'humanitarian crisis', 'poverty'
 ];
 
 const slug  = t => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
