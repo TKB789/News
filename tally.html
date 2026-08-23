@@ -270,7 +270,7 @@
   </p>
 
   <div class="controls">
-    <input type="search" id="q" placeholder="A storm, a disease, a place…" aria-label="Term to plot" autocomplete="off" spellcheck="false">
+    <input type="search" id="q" placeholder="A storm, a disease, a place…" aria-label="Term to plot" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
     <button id="add">Plot</button>
     <button id="clear" class="ghost">Clear</button>
   </div>
@@ -631,7 +631,12 @@ async function fetchWiki(term){
 /* ── series bookkeeping ─────────────────────────────────── */
 
 async function addSeries(term){
-  term = (term||"").trim();
+  // collapse stray spaces and drop a leading capital from phone keyboards,
+  // so "Insider Trading" and "insider trading" are one term everywhere
+  term = (term||"").trim().replace(/\s+/g," ");
+  if(/^[A-Z][a-z]/.test(term) && term === term.replace(/[A-Z]/g,(c,i)=>i?c:c)) {
+    if(!/[A-Z]/.test(term.slice(1))) term = term[0].toLowerCase()+term.slice(1);
+  }
   if(!term || state.series.length>=6) return;
   if(state.series.some(s=>s.term.toLowerCase()===term.toLowerCase())) return;
   const i = state.series.length;
@@ -768,13 +773,17 @@ function render(){
     const blocked = state.src==="news" && ready.some(s=>s.errBlocked);
     if(blocked){
       const onFile = (TRENDS_INDEX&&TRENDS_INDEX.terms||[]).map(t=>t.term);
+      const shown  = onFile.slice(0,8).map(esc).join(' · ');
+      const rest   = onFile.length-8;
       body.innerHTML='<div class="blank"><b class="warn">Not on file</b>'
-        +'Your browser will not let this page call the news service directly, so world news '
-        +'only works for terms kept on file in this repository.<br><br>'
+        +'World news is drawn from series kept in this repository, and '
+        +'“'+esc(ready[0].term)+'” is not one of them yet.<br><br>'
         +(onFile.length
-          ? 'On file now: '+onFile.map(esc).join(' · ')
+          ? '<b style="font-size:15px;font-style:normal">'+onFile.length+' subjects on file</b>'
+            +shown+(rest>0?' · and '+rest+' more':'')
+            +'<br><br>Everything in the <em>Standing watch</em> menu above is on file.'
             +'<br><br>To add this one: Actions tab › Refresh trend series › Run workflow, '
-            +'type “'+esc(ready[0].term)+'” into the box, and reload in a minute.'
+            +'type “'+esc(ready[0].term)+'” into the box, then reload.'
           : 'Nothing on file yet — run the <em>Refresh trend series</em> workflow once, '
             +'leaving the term box empty.')
         +'<br><br>This paper and Lookups work for any term.</div>';
