@@ -4,7 +4,12 @@ on:
   schedule:
     # once a day, 05:20 UTC — the series is daily, so more often buys nothing
     - cron: '20 5 * * *'
-  workflow_dispatch:        # lets you run it manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      term:
+        description: 'Add one term now (leave blank to refresh all of them)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -22,6 +27,8 @@ jobs:
           node-version: '24'
 
       - name: Fetch trend series
+        env:
+          TALLY_TERM: ${{ inputs.term }}
         run: node scripts/trends.mjs
 
       - name: Commit series
