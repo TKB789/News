@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Tally — The Quiet Desk</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Oswald:wght@400;500;600;700&display=swap');
+  :root{
+    --news:#f6f2e9;
+    --news-deep:#ece6d8;
+    --ink:#14110c;
+    --ink-soft:#4a443a;
+    --rule:#1c1810;
+    --hair:#b9b09c;
+    --accent:#6b1410;
+    --max:920px;
+    color-scheme:light;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--news);color:var(--ink);
+    font-family:'Spectral',Georgia,serif;font-size:19px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto;}*{animation:none!important;transition:none!important;}}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 26px 90px;}
+
+  /* ---- nameplate ---- */
+  header.mast{padding:26px 0 0;border-bottom:3px double var(--rule);}
+  .topline{display:flex;justify-content:space-between;font-family:'Oswald',sans-serif;
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);
+    padding-bottom:8px;border-bottom:1px solid var(--rule);}
+  .topline a{color:var(--ink-soft);text-decoration:none;border-bottom:1px solid var(--hair);}
+  .topline a:hover{color:var(--accent);border-color:var(--accent);}
+  h1.title{font-family:'Playfair Display',serif;font-weight:900;text-align:center;
+    font-size:clamp(42px,11vw,92px);line-height:.92;letter-spacing:-.01em;margin:.14em 0 .1em;}
+  .sub-rule{display:flex;align-items:center;gap:14px;border-top:1px solid var(--rule);
+    border-bottom:3px double var(--rule);padding:7px 0;
+    font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-soft);justify-content:center;text-align:center;flex-wrap:wrap;}
+  .sub-rule .live{color:var(--accent);font-weight:600;}
+
+  /* ---- standfirst ---- */
+  .standfirst{padding:20px 0 4px;font-size:17px;line-height:1.5;
+    max-width:62ch;margin:0 auto;text-align:justify;hyphens:auto;}
+  .standfirst::first-letter{font-family:'Playfair Display',serif;font-weight:900;
+    float:left;font-size:60px;line-height:.78;padding:5px 10px 0 0;color:var(--accent);}
+
+  /* ---- query bar ---- */
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    padding:16px 0 12px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-top:20px;}
+  .controls input[type=search]{flex:1 1 200px;min-width:150px;background:#fffdf7;
+    border:1px solid var(--hair);color:var(--ink);font-family:'Spectral',serif;
+    font-size:15px;padding:9px 12px;border-radius:0;}
+  .controls input::placeholder{color:var(--ink-soft);font-style:italic;}
+  button{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    cursor:pointer;background:var(--ink);color:var(--news);border:none;padding:10px 15px;border-radius:0;}
+  button.ghost{background:none;color:var(--ink);border:1px solid var(--ink);}
+  button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .presets{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:12px 0 2px;}
+  .presets .lbl{font-family:'Oswald',sans-serif;font-size:10.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-soft);margin-right:4px;}
+  .chipbtn{font-family:'Spectral',serif;font-size:14px;font-style:italic;background:none;
+    border:1px solid var(--hair);color:var(--ink-soft);padding:4px 10px;
+    text-transform:none;letter-spacing:0;}
+  .chipbtn:hover{border-color:var(--accent);color:var(--accent);background:none;}
+
+  /* ---- plotted legend ---- */
+  .plotted{display:flex;gap:8px;flex-wrap:wrap;padding:14px 0 10px;min-height:18px;}
+  .series-chip{display:flex;align-items:center;gap:9px;background:#fffdf7;
+    border:1px solid var(--hair);padding:5px 6px 5px 10px;}
+  .series-chip .key{width:26px;height:0;border-top-width:2.5px;border-top-style:solid;flex:none;}
+  .series-chip .nm{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.06em;
+    text-transform:uppercase;}
+  .series-chip .spike{font-family:'Oswald',sans-serif;font-size:9.5px;letter-spacing:.1em;
+    background:var(--accent);color:var(--news);padding:2px 6px;}
+  .series-chip .load{font-family:'Spectral',serif;font-style:italic;font-size:13px;color:var(--ink-soft);}
+  .series-chip .drop{background:none;border:none;color:var(--hair);cursor:pointer;
+    font-size:17px;line-height:1;padding:0 3px;font-family:'Spectral',serif;}
+  .series-chip .drop:hover{color:var(--accent);background:none;}
+
+  /* ---- the chart, set like a printed table ---- */
+  .chart-frame{background:#fffdf7;border:1px solid var(--rule);position:relative;}
+  .chart-head{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;
+    padding:11px 14px;border-bottom:1px solid var(--rule);}
+  .chart-head .t{font-family:'Playfair Display',serif;font-weight:700;font-size:20px;
+    text-transform:uppercase;letter-spacing:.02em;}
+  .chart-head .unit{font-family:'Oswald',sans-serif;font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-soft);}
+  svg.plot{display:block;width:100%;height:auto;touch-action:pan-y;}
+  .axis-t{font-family:'Oswald',sans-serif;font-size:10px;fill:var(--ink-soft);letter-spacing:.06em;}
+  .peak-t{font-family:'Oswald',sans-serif;font-size:9.5px;letter-spacing:.09em;}
+  .band-t{font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.14em;}
+  .blank{padding:60px 24px;text-align:center;color:var(--ink-soft);
+    font-family:'Spectral',serif;font-style:italic;font-size:16px;line-height:1.9;}
+  .blank b{display:block;font-family:'Playfair Display',serif;font-size:26px;font-style:normal;
+    color:var(--ink);font-weight:700;margin-bottom:10px;}
+  .blank .warn{color:var(--accent);}
+  .readout{position:absolute;pointer-events:none;background:var(--ink);color:var(--news);
+    font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.05em;padding:8px 10px;
+    line-height:1.7;white-space:nowrap;opacity:0;transition:opacity .1s;z-index:6;}
+  .readout.on{opacity:1;}
+  .readout .d{color:var(--hair);letter-spacing:.12em;display:block;margin-bottom:4px;
+    border-bottom:1px solid rgba(185,176,156,.35);padding-bottom:3px;}
+  .readout .r{display:flex;gap:14px;justify-content:space-between;}
+
+  /* ---- utility bar under chart ---- */
+  .dials{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 0 0;}
+  .dial{display:flex;align-items:center;gap:7px;}
+  .dial .lbl{font-family:'Oswald',sans-serif;font-size:10.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-soft);}
+  .seg{display:flex;}
+  .seg button{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.06em;
+    padding:7px 11px;background:none;color:var(--ink-soft);border:1px solid var(--hair);margin-left:-1px;}
+  .seg button:first-child{margin-left:0;}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--news);border-color:var(--ink);
+    position:relative;z-index:1;}
+  .seg button:hover{color:var(--accent);}
+  .seg button[aria-pressed="true"]:hover{color:var(--news);}
+
+  /* ---- departments ---- */
+  .cat-head{display:flex;align-items:center;gap:16px;padding:34px 0 4px;}
+  .cat-head::before,.cat-head::after{content:"";flex:1;height:0;border-top:1px solid var(--rule);}
+  .cat-name{font-family:'Playfair Display',serif;font-weight:700;font-size:23px;
+    letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;}
+  .cat-rule{border-bottom:2px solid var(--rule);margin-bottom:6px;}
+
+  .cols{display:grid;grid-template-columns:1.05fr 1fr;gap:0 34px;}
+  h3.deptsub{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-soft);margin:14px 0 6px;
+    border-bottom:1px solid var(--hair);padding-bottom:5px;
+    display:flex;justify-content:space-between;gap:10px;}
+  .plist{list-style:none;margin:0;padding:0;max-height:380px;overflow-y:auto;}
+  .plist li{padding:10px 0;border-bottom:1px solid var(--hair);}
+  .plist li:last-child{border-bottom:none;}
+  .alert-h{display:flex;gap:9px;align-items:baseline;flex-wrap:wrap;}
+  .alert-h .ev{font-family:'Playfair Display',serif;font-weight:700;font-size:17px;line-height:1.2;}
+  .alert-h .sev{font-family:'Oswald',sans-serif;font-size:9.5px;letter-spacing:.1em;
+    padding:2px 6px;color:var(--news);background:var(--ink-soft);}
+  .alert-h .sev.x{background:var(--accent);}
+  .alert-a{font-family:'Spectral',serif;font-size:14px;color:var(--ink-soft);
+    margin-top:4px;line-height:1.45;}
+  .rank{display:flex;align-items:center;gap:10px;cursor:pointer;}
+  .rank .nm{font-family:'Spectral',serif;font-size:15px;width:110px;flex:none;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .rank .bar{flex:1;height:11px;background:var(--news-deep);position:relative;min-width:34px;
+    border:1px solid var(--hair);}
+  .rank .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ink-soft);display:block;}
+  .rank .bar i.hot{background:var(--accent);}
+  .rank .z{font-family:'Oswald',sans-serif;font-size:11px;color:var(--ink-soft);
+    width:50px;text-align:right;flex:none;letter-spacing:.04em;}
+  .plist li.rowbtn:hover{background:var(--news-deep);}
+  .note{font-family:'Spectral',serif;font-style:italic;font-size:15px;color:var(--ink-soft);
+    line-height:1.55;padding:10px 0;}
+  .note a{color:var(--accent);}
+  .note.fail{color:var(--accent);font-style:normal;font-size:14px;}
+  .sect{border-bottom:1px solid var(--hair);}
+  .sect > summary{display:flex;align-items:baseline;gap:12px;cursor:pointer;
+    font-family:'Spectral',serif;font-size:15px;padding:9px 2px;list-style:none;}
+  .sect > summary::-webkit-details-marker{display:none;}
+  .sect > summary::marker{content:"";}
+  .sect > summary:hover{background:var(--news-deep);}
+  .sect > summary .nm{flex:1;}
+  .sect > summary .n{font-family:'Oswald',sans-serif;font-size:12px;
+    color:var(--accent);letter-spacing:.06em;}
+  .sect > summary .mk{font-family:'Oswald',sans-serif;font-size:13px;
+    color:var(--ink-soft);width:14px;text-align:center;}
+  .sect[open] > summary .mk::before{content:"–";}
+  .sect:not([open]) > summary .mk::before{content:"+";}
+  .art-list{list-style:none;margin:0 0 12px;padding:0;}
+  .art-list li{padding:9px 0 9px 14px;border-top:1px dotted var(--hair);}
+  .art-list .hl{font-family:'Playfair Display',serif;font-weight:700;font-size:17px;
+    line-height:1.2;color:var(--ink);text-decoration:none;display:block;}
+  a.hl:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
+  .art-meta{font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-soft);margin-top:5px;}
+  .art-meta .src{color:var(--accent);font-weight:600;}
+  .art-more{font-family:'Spectral',serif;font-style:italic;font-size:14px;
+    color:var(--ink-soft);padding:9px 0 9px 14px;border-top:1px dotted var(--hair);}
+
+  /* ---- sources ---- */
+  .slinks{list-style:none;margin:0;padding:0;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px 34px;}
+  .slinks li{font-family:'Spectral',serif;font-size:15px;line-height:1.4;
+    padding:8px 0;border-bottom:1px solid var(--hair);}
+  .slinks a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--accent);}
+  .slinks a:hover{color:var(--accent);}
+  .slinks span{display:block;font-size:13.5px;font-style:italic;color:var(--ink-soft);margin-top:2px;}
+
+  footer{margin-top:46px;padding-top:14px;border-top:3px double var(--rule);
+    font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-soft);line-height:1.7;text-align:center;}
+  footer a{color:var(--ink-soft);}
+
+  @media(max-width:700px){
+    .cols{grid-template-columns:1fr;}
+    .rank .nm{width:92px;}
+    .standfirst{text-align:left;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <div class="topline">
+      <span><a href="index.html">‹ The Quiet Desk</a></span>
+      <span>Standing Department</span>
+      <span>Price: Free</span>
+    </div>
+    <h1 class="title">The Tally</h1>
+    <div class="sub-rule">
+      <span id="dateline">—</span>
+      <span>·</span>
+      <span id="livenote" class="live">Reading the advisories…</span>
+    </div>
+  </header>
+
+  <p class="standfirst">
+    Every storm and every outbreak announces itself first as a change in attention — and so
+    does anything else worth watching. This page counts that change three ways: how often a
+    subject turns up in this paper's own archive, what share of the world's news it takes up,
+    and how many people go looking it up. Plot a term below, then set it against the same
+    weeks in earlier years.
+  </p>
+
+  <div class="controls">
+    <input type="search" id="q" placeholder="A storm, a disease, a place…" aria-label="Term to plot" autocomplete="off" spellcheck="false">
+    <button id="add">Plot</button>
+    <button id="clear" class="ghost">Clear</button>
+  </div>
+
+  <div class="presets">
+    <span class="lbl">Standing watch</span>
+    <button class="chipbtn" data-p="hurricane">hurricane</button>
+    <button class="chipbtn" data-p="tropical storm">tropical storm</button>
+    <button class="chipbtn" data-p="storm surge">storm surge</button>
+    <button class="chipbtn" data-p="flooding">flooding</button>
+    <button class="chipbtn" data-p="H5N1">H5N1</button>
+    <button class="chipbtn" data-p="measles">measles</button>
+    <button class="chipbtn" data-p="dengue">dengue</button>
+    <button class="chipbtn" data-p="cholera">cholera</button>
+    <button class="chipbtn" data-p="outbreak">outbreak</button>
+  </div>
+
+  <div class="plotted" id="plotted"></div>
+
+  <div class="chart-frame">
+    <div class="chart-head">
+      <span class="t" id="chartTitle">The Plot</span>
+      <span class="unit" id="chartUnit">indexed · each line's own peak reads 100</span>
+    </div>
+    <div id="chartBody">
+      <div class="blank"><b>Nothing plotted yet</b>
+        Type a term above, or choose one from the standing watch.<br>
+        Plot several to set them against each other.</div>
+    </div>
+    <div class="readout" id="readout"></div>
+  </div>
+
+  <div class="dials">
+    <div class="dial"><span class="lbl">Measure</span>
+      <div class="seg" id="srcSeg">
+        <button data-src="archive" aria-pressed="true">This paper</button>
+        <button data-src="news" aria-pressed="false">World news</button>
+        <button data-src="wiki" aria-pressed="false">Lookups</button>
+      </div>
+    </div>
+    <div class="dial"><span class="lbl">Span</span>
+      <div class="seg" id="rangeSeg">
+        <button data-r="90" aria-pressed="false">90d</button>
+        <button data-r="365" aria-pressed="true">1yr</button>
+        <button data-r="1825" aria-pressed="false">5yr</button>
+        <button data-r="max" aria-pressed="false">All</button>
+      </div>
+    </div>
+    <div class="dial"><span class="lbl">Plate</span>
+      <div class="seg" id="viewSeg">
+        <button data-v="line" aria-pressed="true">Timeline</button>
+        <button data-v="season" aria-pressed="false">Season</button>
+      </div>
+    </div>
+    <div class="dial">
+      <div class="seg"><button id="smoothBtn" aria-pressed="true">7-day mean</button></div>
+      <button class="ghost" id="csv">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="cat-head"><span class="cat-name">The Wires</span></div>
+  <div class="cat-rule"></div>
+  <div class="cols">
+    <div class="col">
+      <h3 class="deptsub"><span>Advisories in effect</span><span id="alertN"></span></h3>
+      <ul class="plist" id="alerts"><li class="note">Reading the National Weather Service…</li></ul>
+    </div>
+    <div class="col">
+      <h3 class="deptsub"><span>Rising this month</span><span>vs 90-day mean</span></h3>
+      <ul class="plist" id="watch"><li class="note">Taking the readings…</li></ul>
+    </div>
+  </div>
+
+  <div class="cat-head"><span class="cat-name">Where It Ran</span></div>
+  <div class="cat-rule"></div>
+  <div id="sections"><p class="note">Plot a term to see which sections of this paper carried it.</p></div>
+
+  <div class="cat-head"><span class="cat-name">Instruments</span></div>
+  <div class="cat-rule"></div>
+  <ul class="slinks">
+    <li><a href="index.html">This paper's archive</a><span>Sixty days of captured editions, counted by hand from <code>data/</code>.</span></li>
+    <li><a href="https://api.gdeltproject.org/api/v2/doc/doc?query=hurricane&amp;mode=timelinevol&amp;format=html&amp;timespan=1y" target="_blank" rel="noopener">GDELT news volume</a><span>Share of worldwide coverage, 2017 onward. Free, no key.</span></li>
+    <li><a href="https://wikimedia.org/api/rest_v1/" target="_blank" rel="noopener">Wikimedia pageviews</a><span>Daily article reads, 2015 onward. Free, no key.</span></li>
+    <li><a href="https://www.weather.gov/documentation/services-web-api" target="_blank" rel="noopener">NWS alerts</a><span>Live American watches and warnings.</span></li>
+    <li><a href="https://www.nhc.noaa.gov/" target="_blank" rel="noopener">National Hurricane Center</a><span>Official forecasts, cones and advisories.</span></li>
+    <li><a href="https://www.nhc.noaa.gov/data/#hurdat" target="_blank" rel="noopener">HURDAT2</a><span>Every Atlantic track since 1851, as plain text.</span></li>
+    <li><a href="https://www.who.int/emergencies/disease-outbreak-news" target="_blank" rel="noopener">WHO outbreak news</a><span>Verified global outbreak reports.</span></li>
+    <li><a href="https://www.cdc.gov/outbreaks/" target="_blank" rel="noopener">CDC investigations</a><span>American case counts as they are confirmed.</span></li>
+  </ul>
+
+  <footer>
+    The Tally · A standing department of <a href="index.html">The Quiet Desk</a><br>
+    Attention is not the same as danger · Read the official advisory before you act
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+/* ── setup ──────────────────────────────────────────────── */
+const $ = s => document.querySelector(s);
+const TODAY = new Date();
+const KEYS = ["#14110c","#6b1410","#2a4b6b","#4a6b2a","#6b4a14","#4a2a5c"];
+const DASH = ["none","6 4","1 4","10 4 2 4","4 3","none"];
+
+const state = { series:[], src:"archive", range:365, view:"line", smooth:true };
+let nextId = 1;
+
+const pad = n => String(n).padStart(2,"0");
+const ymd = d => d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate());
+const iso = d => d.toISOString().slice(0,10);
+function daysAgo(n){ const d=new Date(TODAY); d.setUTCDate(d.getUTCDate()-n); return d; }
+function esc(t){ return String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+$("#dateline").textContent = TODAY.toLocaleDateString("en-GB",
+  {weekday:"long",day:"numeric",month:"long",year:"numeric"});
+
+/* ── source 1: this paper's own archive ─────────────────── */
+/* Each daily snapshot holds only what was NEW that day, so a count of
+   matching items per day is already a "new mentions" series. */
+
+let ARCHIVE = null;          // {days:[key], byDay:Map(key -> items[])}
+let archivePromise = null;
+
+async function loadArchive(){
+  if(ARCHIVE) return ARCHIVE;
+  if(archivePromise) return archivePromise;
+  archivePromise = (async ()=>{
+    const idx = await (await fetch("data/index.json")).json();
+    const days = (idx.days||[]).slice().sort();
+    const byDay = new Map();
+    const queue = [...days];
+    async function worker(){
+      while(queue.length){
+        const d = queue.shift();
+        try{
+          const snap = await (await fetch("data/"+d+".json")).json();
+          const flat = [];
+          for(const c of snap.cats||[])
+            for(const it of c.items||[])
+              flat.push({
+                cat:c.name,
+                text:((it.title||"")+" "+(it.blurb||"")).toLowerCase(),
+                title:it.title||"", link:it.link||"", src:it.src||"", day:d
+              });
+          byDay.set(d, flat);
+        }catch{ byDay.set(d, []); }
+      }
+    }
+    await Promise.all([worker(),worker(),worker(),worker(),worker(),worker()]);
+    ARCHIVE = {days, byDay};
+    return ARCHIVE;
+  })();
+  return archivePromise;
+}
+
+function termTest(term){
+  const t = term.toLowerCase().trim();
+  const esc_ = t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+  return new RegExp("\\b"+esc_.replace(/\s+/g,"\\s+"), "i");
+}
+
+async function fetchArchive(term){
+  const {days, byDay} = await loadArchive();
+  const re = termTest(term);
+  const pts = [], bySection = new Map();
+  for(const d of days){
+    let n = 0;
+    for(const it of byDay.get(d)||[]){
+      if(re.test(it.text)){
+        n++;
+        if(!bySection.has(it.cat)) bySection.set(it.cat,[]);
+        bySection.get(it.cat).push(it);
+      }
+    }
+    pts.push({d, v:n});
+  }
+  // newest edition first within each section
+  for(const arr of bySection.values()) arr.sort((a,b)=> a.day<b.day ? 1 : -1);
+  return {pts, bySection};
+}
+
+/* ── source 2: world news volume ────────────────────────── */
+/* Read the copy committed by the Action first: it is same-origin, so it
+   always loads. Only fall back to calling GDELT from the browser, which
+   many browsers block cross-origin. */
+
+const slug = t => t.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+let TRENDS_INDEX = null;
+
+async function trendsIndex(){
+  if(TRENDS_INDEX) return TRENDS_INDEX;
+  try{
+    const r = await fetch("data/trends/index.json");
+    TRENDS_INDEX = r.ok ? await r.json() : {terms:[]};
+  }catch{ TRENDS_INDEX = {terms:[]}; }
+  return TRENDS_INDEX;
+}
+
+async function fetchNews(term){
+  // 1. on file in this repo
+  try{
+    const r = await fetch("data/trends/"+slug(term)+".json");
+    if(r.ok){
+      const j = await r.json();
+      if(j.pts && j.pts.length) return j.pts;
+    }
+  }catch{}
+
+  // 2. live, direct — works on some browsers, blocked on others
+  const q = /\s/.test(term) ? '"'+term+'"' : term;
+  const url = "https://api.gdeltproject.org/api/v2/doc/doc?query="+encodeURIComponent(q)
+    + "&mode=timelinevol&format=json&startdatetime=20170101000000&enddatetime="+ymd(TODAY)+"000000";
+  let r;
+  try{
+    r = await fetch(url);
+  }catch{
+    const e = new Error("your browser blocked the call to the news service");
+    e.blocked = true;
+    throw e;
+  }
+  if(!r.ok) throw new Error("the news service returned "+r.status);
+  let j;
+  try{ j = await r.json(); }
+  catch{ throw new Error("the news service sent something unreadable"); }
+  const raw = (j.timeline && j.timeline[0] && j.timeline[0].data) || [];
+  if(!raw.length) throw new Error("no coverage found for that term");
+  const b = new Map();
+  for(const p of raw){
+    const s = String(p.date);
+    const day = s.includes("-") ? s.slice(0,10)
+      : s.slice(0,4)+"-"+s.slice(4,6)+"-"+s.slice(6,8);
+    const rec = b.get(day) || [0,0];
+    rec[0]+=Number(p.value)||0; rec[1]++; b.set(day,rec);
+  }
+  return [...b.entries()].map(([d,[s,n]])=>({d, v:s/n})).sort((a,b)=>a.d<b.d?-1:1);
+}
+
+/* ── source 3: encyclopedia lookups ─────────────────────── */
+
+async function fetchWiki(term){
+  const s = await fetch("https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch="
+    + encodeURIComponent(term) + "&srlimit=1&format=json&origin=*");
+  if(!s.ok) throw new Error("article lookup returned "+s.status);
+  const sj = await s.json();
+  const hit = sj.query && sj.query.search && sj.query.search[0];
+  if(!hit) throw new Error("no article matches that term");
+  const enc = encodeURIComponent(hit.title.replace(/ /g,"_"));
+  const r = await fetch("https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/"
+    + "en.wikipedia/all-access/user/"+enc+"/daily/20150701/"+ymd(TODAY));
+  if(!r.ok) throw new Error("pageviews returned "+r.status);
+  const j = await r.json();
+  return {
+    title: hit.title,
+    pts: (j.items||[]).map(it=>({
+      d: it.timestamp.slice(0,4)+"-"+it.timestamp.slice(4,6)+"-"+it.timestamp.slice(6,8),
+      v: it.views }))
+  };
+}
+
+/* ── series bookkeeping ─────────────────────────────────── */
+
+async function addSeries(term){
+  term = (term||"").trim();
+  if(!term || state.series.length>=6) return;
+  if(state.series.some(s=>s.term.toLowerCase()===term.toLowerCase())) return;
+  const i = state.series.length;
+  const s = { id:nextId++, term, color:KEYS[i%KEYS.length], dash:DASH[i%DASH.length],
+              archive:null, news:null, wiki:null, sections:null, article:null,
+              status:"loading", err:{} };
+  state.series.push(s);
+  renderChips(); render();
+
+  await Promise.all([
+    fetchArchive(term).then(r=>{ s.archive=r.pts; s.sections=r.bySection; })
+      .catch(e=>{ s.archive=[]; s.err.archive=e.message; }),
+    fetchNews(term).then(d=>{ s.news=d; })
+      .catch(e=>{ s.news=[]; s.err.news=e.message; s.errBlocked=!!e.blocked; }),
+    fetchWiki(term).then(d=>{ s.wiki=d.pts; s.article=d.title; })
+      .catch(e=>{ s.wiki=[]; s.err.wiki=e.message; })
+  ]);
+  s.status="ready";
+  renderChips(); render(); renderSections();
+}
+
+function removeSeries(id){
+  state.series = state.series.filter(s=>s.id!==id);
+  state.series.forEach((s,i)=>{ s.color=KEYS[i%KEYS.length]; s.dash=DASH[i%DASH.length]; });
+  renderChips(); render(); renderSections();
+}
+
+function rollingMean(pts,w){
+  const out=[]; let sum=0;
+  for(let i=0;i<pts.length;i++){
+    sum+=pts[i].v;
+    if(i>=w) sum-=pts[i-w].v;
+    if(i>=w-1) out.push({d:pts[i].d, v:sum/w});
+  }
+  return out;
+}
+
+function seriesPoints(s){
+  const raw = s[state.src];
+  if(!raw || !raw.length) return [];
+  const start = state.range==="max" ? "2000-01-01" : iso(daysAgo(Number(state.range)));
+  let pts = raw.filter(p=>p.d>=start);
+  if(state.smooth && pts.length>14) pts = rollingMean(pts,7);
+  return pts;
+}
+
+function zScore(pts){
+  if(pts.length<40) return null;
+  const recent = pts.slice(-7).reduce((a,p)=>a+p.v,0)/7;
+  const base = pts.slice(-97,-7);
+  if(base.length<25) return null;
+  const m = base.reduce((a,p)=>a+p.v,0)/base.length;
+  const sd = Math.sqrt(base.reduce((a,p)=>a+(p.v-m)**2,0)/base.length);
+  if(!sd) return null;
+  return (recent-m)/sd;
+}
+
+/* ── legend ─────────────────────────────────────────────── */
+
+function renderChips(){
+  const el=$("#plotted"); el.innerHTML="";
+  for(const s of state.series){
+    const z = zScore(seriesPoints(s));
+    const c=document.createElement("div");
+    c.className="series-chip";
+    c.innerHTML='<span class="key" style="border-top-color:'+s.color
+      +';border-top-style:'+(s.dash==="none"?"solid":"dashed")+'"></span>'
+      +'<span class="nm">'+esc(s.term)+'</span>'
+      +(s.status==="loading"?'<span class="load">setting…</span>':"")
+      +(z!==null&&z>2?'<span class="spike">rising '+z.toFixed(1)+'σ</span>':"")
+      +'<button class="drop" aria-label="Remove '+esc(s.term)+'">✕</button>';
+    c.querySelector(".drop").onclick=()=>removeSeries(s.id);
+    el.appendChild(c);
+  }
+}
+
+/* ── the plot ───────────────────────────────────────────── */
+
+const M={t:20,r:20,b:28,l:38};
+const NS="http://www.w3.org/2000/svg";
+function el(n,a){ const e=document.createElementNS(NS,n); for(const k in a) e.setAttribute(k,a[k]); return e; }
+
+const SRC_LABEL={archive:"Reports in this paper",news:"Share of world news",wiki:"Encyclopedia lookups"};
+
+function render(){
+  const body=$("#chartBody");
+  if(!state.series.length){
+    body.innerHTML='<div class="blank"><b>Nothing plotted yet</b>'
+      +'Type a term above, or choose one from the standing watch.<br>'
+      +'Plot several to set them against each other.</div>';
+    $("#chartTitle").textContent="The Plot";
+    return;
+  }
+  const ready=state.series.filter(s=>s.status==="ready");
+  if(!ready.length){
+    body.innerHTML='<div class="blank"><b>Setting the plate</b>Taking the readings…</div>';
+    return;
+  }
+  const live=ready.filter(s=>seriesPoints(s).length>1);
+  if(!live.length){
+    const e=ready.map(s=>s.err[state.src]).find(Boolean);
+    const blocked = state.src==="news" && ready.some(s=>s.errBlocked);
+    if(blocked){
+      const onFile = (TRENDS_INDEX&&TRENDS_INDEX.terms||[]).map(t=>t.term);
+      body.innerHTML='<div class="blank"><b class="warn">Not on file</b>'
+        +'Your browser will not let this page call the news service directly, so world news '
+        +'only works for terms kept on file in this repository.<br><br>'
+        +(onFile.length
+          ? 'On file now: '+onFile.map(esc).join(' · ')
+            +'<br><br>Add more by editing the list in <em>scripts/trends.mjs</em>.'
+          : 'Nothing on file yet — run the <em>Refresh trend series</em> workflow once.')
+        +'<br><br>This paper and Lookups work for any term.</div>';
+      return;
+    }
+    body.innerHTML='<div class="blank"><b class="warn">No readings</b>'
+      +esc(SRC_LABEL[state.src])+' came back empty for '
+      +(ready.length>1?'these terms':'“'+esc(ready[0].term)+'”')+'.'
+      +(e?'<br>'+esc(e):"")
+      +'<br>Try another measure, a wider span, or a broader word.</div>';
+    return;
+  }
+  $("#chartTitle").textContent=SRC_LABEL[state.src];
+  let unit = state.view==="season"
+    ? "by day of year · one line per year · indexed"
+    : (state.src==="archive"
+        ? "indexed · sixty days of captured editions"
+        : "indexed · each line's own peak reads 100");
+  if(state.src==="wiki"){
+    const names=live.filter(s=>s.article).map(s=>s.article);
+    if(names.length) unit += " · reading " + names.join(", ");
+  }
+  $("#chartUnit").textContent = unit;
+  body.innerHTML="";
+  body.appendChild(state.view==="season" ? seasonPlot(live) : timePlot(live));
+}
+
+function fmt(v){
+  if(state.src==="news") return (v*100).toFixed(3)+"%";
+  if(state.src==="wiki") return Math.round(v).toLocaleString();
+  return (Math.round(v*10)/10)+" reports";
+}
+
+function timePlot(list){
+  const W=1000,H=380,iw=W-M.l-M.r,ih=H-M.t-M.b;
+  const svg=el("svg",{class:"plot",viewBox:"0 0 "+W+" "+H,preserveAspectRatio:"none"});
+  let t0=Infinity,t1=-Infinity;
+  const prep=list.map(s=>{
+    const pts=seriesPoints(s);
+    const mx=Math.max(...pts.map(p=>p.v))||1;
+    const arr=pts.map(p=>({t:Date.parse(p.d), y:p.v/mx*100, raw:p.v, d:p.d}));
+    for(const p of arr){ if(p.t<t0)t0=p.t; if(p.t>t1)t1=p.t; }
+    return {s,arr};
+  });
+  const X=t=>M.l+(t-t0)/(t1-t0||1)*iw, Y=y=>M.t+ih-y/100*ih;
+
+  for(let g=0;g<=100;g+=25){
+    svg.appendChild(el("line",{x1:M.l,x2:W-M.r,y1:Y(g),y2:Y(g),
+      stroke:"#b9b09c","stroke-width":.7,"stroke-dasharray":g?"2 4":"none"}));
+    const t=el("text",{x:M.l-7,y:Y(g)+3.5,"text-anchor":"end",class:"axis-t"});
+    t.textContent=g; svg.appendChild(t);
+  }
+  const span=(t1-t0)/864e5;
+  const step=span>1500?"y":span>420?"q":span>120?"m":"w";
+  const cur=new Date(t0); cur.setUTCHours(0,0,0,0); cur.setUTCDate(1);
+  if(step==="y"){ cur.setUTCMonth(0); cur.setUTCFullYear(cur.getUTCFullYear()+1); }
+  let guard=0;
+  while(cur.getTime()<=t1 && guard++<500){
+    const x=X(cur.getTime());
+    if(x>M.l+6){
+      svg.appendChild(el("line",{x1:x,x2:x,y1:M.t,y2:M.t+ih,stroke:"#b9b09c",
+        "stroke-width":.7,"stroke-dasharray":"2 4"}));
+      const lb=el("text",{x,y:H-9,"text-anchor":"middle",class:"axis-t"});
+      lb.textContent = step==="y" ? cur.getUTCFullYear()
+        : cur.toLocaleString("en",{month:"short",timeZone:"UTC"}).toUpperCase()
+          + (cur.getUTCMonth()===0 ? " ’"+String(cur.getUTCFullYear()).slice(2) : "");
+      svg.appendChild(lb);
+    }
+    if(step==="y") cur.setUTCFullYear(cur.getUTCFullYear()+1);
+    else if(step==="q") cur.setUTCMonth(cur.getUTCMonth()+3);
+    else if(step==="m") cur.setUTCMonth(cur.getUTCMonth()+1);
+    else cur.setUTCDate(cur.getUTCDate()+14);
+  }
+  svg.appendChild(el("rect",{x:M.l,y:M.t,width:iw,height:ih,fill:"none",
+    stroke:"#1c1810","stroke-width":1}));
+
+  for(const {s,arr} of prep){
+    const d=arr.map((p,i)=>(i?"L":"M")+X(p.t).toFixed(1)+" "+Y(p.y).toFixed(1)).join(" ");
+    const path=el("path",{d,fill:"none",stroke:s.color,"stroke-width":1.8,
+      "stroke-linejoin":"round","stroke-linecap":"round"});
+    if(s.dash!=="none") path.setAttribute("stroke-dasharray",s.dash);
+    svg.appendChild(path);
+    const pk=arr.reduce((a,b)=>b.y>a.y?b:a,arr[0]);
+    const px=X(pk.t),py=Y(pk.y),flip=px>W-160;
+    svg.appendChild(el("line",{x1:px,y1:py-4,x2:px,y2:py-14,stroke:s.color,"stroke-width":1}));
+    const lab=el("text",{x:flip?px-5:px+5,y:py-17,"text-anchor":flip?"end":"start",
+      class:"peak-t",fill:s.color});
+    lab.textContent="HIGH "+pk.d;
+    svg.appendChild(lab);
+  }
+
+  const cross=el("line",{x1:0,x2:0,y1:M.t,y2:M.t+ih,stroke:"#14110c",
+    "stroke-width":1,"stroke-dasharray":"3 3",opacity:0});
+  svg.appendChild(cross);
+  const hit=el("rect",{x:M.l,y:M.t,width:iw,height:ih,fill:"transparent"});
+  svg.appendChild(hit);
+  const ro=$("#readout");
+  function move(ev){
+    const pt=ev.touches?ev.touches[0]:ev;
+    const r=svg.getBoundingClientRect();
+    const vx=(pt.clientX-r.left)/r.width*W;
+    if(vx<M.l||vx>W-M.r){ cross.setAttribute("opacity",0); ro.classList.remove("on"); return; }
+    const t=t0+(vx-M.l)/iw*(t1-t0);
+    cross.setAttribute("x1",vx); cross.setAttribute("x2",vx); cross.setAttribute("opacity",.5);
+    let day="",rows="";
+    for(const {s,arr} of prep){
+      let best=arr[0];
+      for(const p of arr) if(Math.abs(p.t-t)<Math.abs(best.t-t)) best=p;
+      day=best.d;
+      rows+='<div class="r"><span>'+esc(s.term)+'</span><span>'+fmt(best.raw)+'</span></div>';
+    }
+    ro.innerHTML='<span class="d">'+day+'</span>'+rows;
+    ro.classList.add("on");
+    const fr=$(".chart-frame").getBoundingClientRect();
+    let lx=pt.clientX-fr.left+14;
+    if(lx+ro.offsetWidth>fr.width-6) lx-=ro.offsetWidth+28;
+    ro.style.left=lx+"px";
+    ro.style.top=(pt.clientY-fr.top-12)+"px";
+  }
+  hit.addEventListener("mousemove",move);
+  hit.addEventListener("touchmove",move,{passive:true});
+  const off=()=>{ cross.setAttribute("opacity",0); ro.classList.remove("on"); };
+  hit.addEventListener("mouseleave",off);
+  hit.addEventListener("touchend",off);
+  return svg;
+}
+
+function seasonPlot(list){
+  const W=1000,H=380,iw=W-M.l-M.r,ih=H-M.t-M.b;
+  const svg=el("svg",{class:"plot",viewBox:"0 0 "+W+" "+H,preserveAspectRatio:"none"});
+  const s=list[0];
+  let pts=s[state.src]||[];
+  if(state.smooth && pts.length>14) pts=rollingMean(pts,7);
+  const mx=Math.max(...pts.map(p=>p.v))||1;
+  const byYear=new Map();
+  for(const p of pts){
+    const y=p.d.slice(0,4);
+    const doy=Math.round((Date.parse(p.d)-Date.UTC(+y,0,1))/864e5);
+    if(!byYear.has(y)) byYear.set(y,[]);
+    byYear.get(y).push({doy, y:p.v/mx*100, raw:p.v});
+  }
+  const X=d=>M.l+d/365*iw, Y=v=>M.t+ih-v/100*ih;
+
+  // Atlantic hurricane season, 1 June – 30 November
+  svg.appendChild(el("rect",{x:X(151),y:M.t,width:X(334)-X(151),height:ih,
+    fill:"#6b1410",opacity:.055}));
+
+  for(let g=0;g<=100;g+=25){
+    svg.appendChild(el("line",{x1:M.l,x2:W-M.r,y1:Y(g),y2:Y(g),stroke:"#b9b09c",
+      "stroke-width":.7,"stroke-dasharray":g?"2 4":"none"}));
+    const t=el("text",{x:M.l-7,y:Y(g)+3.5,"text-anchor":"end",class:"axis-t"});
+    t.textContent=g; svg.appendChild(t);
+  }
+  const MO=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+  const DIM=[31,28,31,30,31,30,31,31,30,31,30,31];
+  let acc=0;
+  for(let m=0;m<12;m++){
+    svg.appendChild(el("line",{x1:X(acc),x2:X(acc),y1:M.t,y2:M.t+ih,
+      stroke:"#b9b09c","stroke-width":.7,"stroke-dasharray":"2 4"}));
+    const lb=el("text",{x:X(acc+DIM[m]/2),y:H-9,"text-anchor":"middle",class:"axis-t"});
+    lb.textContent=MO[m]; svg.appendChild(lb);
+    acc+=DIM[m];
+  }
+  const bt=el("text",{x:X(153),y:M.t+13,class:"band-t",fill:"#6b1410"});
+  bt.textContent="ATLANTIC HURRICANE SEASON";
+  svg.appendChild(bt);
+  svg.appendChild(el("rect",{x:M.l,y:M.t,width:iw,height:ih,fill:"none",
+    stroke:"#1c1810","stroke-width":1}));
+
+  const thisYear=String(TODAY.getUTCFullYear());
+  const traces=[];
+  for(const yr of [...byYear.keys()].sort()){
+    const arr=byYear.get(yr).sort((a,b)=>a.doy-b.doy);
+    if(arr.length<4) continue;
+    const now=yr===thisYear;
+    const d=arr.map((p,i)=>(i?"L":"M")+X(p.doy).toFixed(1)+" "+Y(p.y).toFixed(1)).join(" ");
+    const path=el("path",{d,fill:"none",stroke:now?"#6b1410":"#4a443a",
+      "stroke-width":now?2.2:1,opacity:now?1:.34});
+    svg.appendChild(path);
+    traces.push({yr,arr,path,now});
+  }
+
+  // year labels, pushed apart so they never overprint
+  const LGAP=11, LX=W-M.r-4;
+  const marks=traces.map(t=>{
+    const last=t.arr[t.arr.length-1];
+    return {t, x:Math.min(X(last.doy)+5, LX-26), want:Y(last.y)+3};
+  }).sort((a,b)=>a.want-b.want);
+  for(let i=1;i<marks.length;i++)
+    if(marks[i].want-marks[i-1].want<LGAP) marks[i].want=marks[i-1].want+LGAP;
+  const over=marks.length?marks[marks.length-1].want-(M.t+ih):0;
+  if(over>0) for(const m of marks) m.want-=over;
+  for(const m of marks){
+    const lab=el("text",{x:m.x,y:Math.max(M.t+8,m.want),class:"peak-t",
+      fill:m.t.now?"#6b1410":"#4a443a",opacity:m.t.now?1:.8});
+    lab.textContent=m.t.yr;
+    m.label=lab;
+    svg.appendChild(lab);
+  }
+
+  // crosshair: name every line at the day under the finger
+  const cross=el("line",{x1:0,x2:0,y1:M.t,y2:M.t+ih,stroke:"#14110c",
+    "stroke-width":1,"stroke-dasharray":"3 3",opacity:0});
+  svg.appendChild(cross);
+  const hit=el("rect",{x:M.l,y:M.t,width:iw,height:ih,fill:"transparent"});
+  svg.appendChild(hit);
+  const ro=$("#readout");
+  const MO_FULL=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  function dayLabel(doy){
+    let a=0;
+    for(let m=0;m<12;m++){ if(doy<a+DIM[m]) return MO_FULL[m]+" "+(doy-a+1); a+=DIM[m]; }
+    return "Dec 31";
+  }
+  function move(ev){
+    const pt=ev.touches?ev.touches[0]:ev;
+    const r=svg.getBoundingClientRect();
+    const vx=(pt.clientX-r.left)/r.width*W;
+    const vy=(pt.clientY-r.top)/r.height*H;
+    if(vx<M.l||vx>W-M.r){ off(); return; }
+    const doy=(vx-M.l)/iw*365;
+    cross.setAttribute("x1",vx); cross.setAttribute("x2",vx); cross.setAttribute("opacity",.5);
+    const rows=[];
+    let near=null,nd=Infinity;
+    for(const t of traces){
+      let best=t.arr[0];
+      for(const p of t.arr) if(Math.abs(p.doy-doy)<Math.abs(best.doy-doy)) best=p;
+      const dist=Math.abs(Y(best.y)-vy);
+      if(dist<nd){ nd=dist; near=t; }
+      rows.push({t,best,dist});
+    }
+    for(const t of traces){
+      const on = t===near;
+      t.path.setAttribute("stroke-width", t.now?2.2:(on?2:1));
+      t.path.setAttribute("opacity", t.now?1:(on?.95:.18));
+      t.path.setAttribute("stroke", (on&&!t.now)?"#2a4b6b":(t.now?"#6b1410":"#4a443a"));
+    }
+    for(const m of marks){
+      const on=m.t===near;
+      m.label.setAttribute("opacity", m.t.now?1:(on?1:.3));
+      m.label.setAttribute("fill", (on&&!m.t.now)?"#2a4b6b":(m.t.now?"#6b1410":"#4a443a"));
+    }
+    rows.sort((a,b)=>b.best.raw-a.best.raw);
+    ro.innerHTML='<span class="d">'+dayLabel(Math.round(doy))+'</span>'
+      + rows.map(r=>'<div class="r"><span>'+r.t.yr+(r.t===near?" ◂":"")
+        +'</span><span>'+fmt(r.best.raw)+'</span></div>').join("");
+    ro.classList.add("on");
+    const fr=$(".chart-frame").getBoundingClientRect();
+    let lx=pt.clientX-fr.left+14;
+    if(lx+ro.offsetWidth>fr.width-6) lx-=ro.offsetWidth+28;
+    ro.style.left=lx+"px";
+    ro.style.top=Math.max(4,pt.clientY-fr.top-ro.offsetHeight/2)+"px";
+  }
+  function off(){
+    cross.setAttribute("opacity",0); ro.classList.remove("on");
+    for(const t of traces){
+      t.path.setAttribute("stroke-width",t.now?2.2:1);
+      t.path.setAttribute("opacity",t.now?1:.34);
+      t.path.setAttribute("stroke",t.now?"#6b1410":"#4a443a");
+    }
+    for(const m of marks){
+      m.label.setAttribute("opacity",m.t.now?1:.8);
+      m.label.setAttribute("fill",m.t.now?"#6b1410":"#4a443a");
+    }
+  }
+  hit.addEventListener("mousemove",move);
+  hit.addEventListener("touchmove",move,{passive:true});
+  hit.addEventListener("mouseleave",off);
+  hit.addEventListener("touchend",off);
+  return svg;
+}
+
+/* ── where it ran, by section ───────────────────────────── */
+
+function renderSections(){
+  const host=$("#sections");
+  const withSecs=state.series.filter(s=>s.sections&&s.sections.size);
+  if(!withSecs.length){
+    host.innerHTML='<p class="note">'+(state.series.length
+      ? 'Nothing in the last sixty editions matched. The world-news measure reaches back to 2017.'
+      : 'Plot a term to see which sections of this paper carried it.')+'</p>';
+    return;
+  }
+  const SHOWN=25;
+  host.innerHTML="";
+  for(const s of withSecs){
+    const rows=[...s.sections.entries()].sort((a,b)=>b[1].length-a[1].length);
+    const total=rows.reduce((a,r)=>a+r[1].length,0);
+    const box=document.createElement("div");
+    let html='<h3 class="deptsub"><span>“'+esc(s.term)+'”</span><span>'
+      +total+' report'+(total===1?"":"s")+' · 60 days</span></h3>';
+    for(const [name,items] of rows){
+      const head=items.slice(0,SHOWN).map(it=>{
+        const meta='<div class="art-meta">'+esc(it.day)
+          +(it.src?' · <span class="src">'+esc(it.src)+'</span>':"")+'</div>';
+        return '<li>'+(it.link
+          ? '<a class="hl" href="'+esc(it.link)+'" target="_blank" rel="noopener">'
+            +esc(it.title)+'</a>'
+          : '<span class="hl">'+esc(it.title)+'</span>')+meta+'</li>';
+      }).join("");
+      const rest=items.length-SHOWN;
+      html+='<details class="sect"><summary><span class="nm">'+esc(name)
+        +'</span><span class="n">'+items.length+'</span><span class="mk"></span></summary>'
+        +'<ul class="art-list">'+head
+        +(rest>0?'<li class="art-more">and '+rest+' more in earlier editions.</li>':"")
+        +'</ul></details>';
+    }
+    box.innerHTML=html;
+    host.appendChild(box);
+  }
+}
+
+/* ── the wires: live advisories ─────────────────────────── */
+
+const TROPICAL=["Hurricane Warning","Hurricane Watch","Tropical Storm Warning",
+  "Tropical Storm Watch","Storm Surge Warning","Storm Surge Watch",
+  "Hurricane Force Wind Warning","Hurricane Local Statement"];
+
+async function loadAlerts(){
+  const ul=$("#alerts");
+  try{
+    const r=await fetch("https://api.weather.gov/alerts/active?status=actual&event="
+      +encodeURIComponent(TROPICAL.join(",")),{headers:{Accept:"application/geo+json"}});
+    if(!r.ok) throw new Error("the service returned "+r.status);
+    const f=(await r.json()).features||[];
+    $("#alertN").textContent=f.length?f.length+" live":"none";
+    $("#livenote").textContent=f.length
+      ? f.length+" tropical advisories in effect"
+      : "No tropical advisories in effect";
+    if(!f.length){
+      ul.innerHTML='<li class="note">Nothing standing. Either the coasts are quiet, or a storm '
+        +'has not yet triggered a watch. <a href="https://www.nhc.noaa.gov/" target="_blank" '
+        +'rel="noopener">See the Hurricane Center map ↗</a></li>';
+      return;
+    }
+    ul.innerHTML="";
+    for(const feat of f.slice(0,40)){
+      const p=feat.properties||{};
+      const li=document.createElement("li");
+      li.innerHTML='<div class="alert-h"><span class="ev">'+esc(p.event||"Advisory")+'</span>'
+        +'<span class="sev'+(/Warning/i.test(p.event||"")?" x":"")+'">'
+        +esc((p.severity||"").toUpperCase())+'</span></div>'
+        +'<div class="alert-a">'+esc(p.areaDesc||"")+'</div>';
+      ul.appendChild(li);
+    }
+  }catch(e){
+    $("#livenote").textContent="Advisory wire unreachable";
+    $("#alertN").textContent="—";
+    ul.innerHTML='<li class="note fail">The weather wire refused this request ('+esc(e.message)
+      +'). Read it directly at <a href="https://www.weather.gov/" target="_blank" '
+      +'rel="noopener">weather.gov ↗</a>.</li>';
+  }
+}
+
+/* ── the wires: rising this month ───────────────────────── */
+
+const WATCH=["hurricane","tropical storm","flooding","wildfire","heat wave",
+  "outbreak","measles","dengue","cholera","H5N1"];
+
+async function scanWatch(){
+  const ul=$("#watch");
+  const idx=await trendsIndex();
+  const terms = (idx.terms&&idx.terms.length) ? idx.terms.map(t=>t.term) : WATCH;
+  const out=[];
+  let blocked=false;
+  const queue=[...terms];
+  async function worker(){
+    while(queue.length){
+      const term=queue.shift();
+      try{
+        const z=zScore(rollingMean(await fetchNews(term),7));
+        if(z!==null) out.push({term,z});
+      }catch(e){ if(e.blocked) blocked=true; }
+    }
+  }
+  await Promise.all([worker(),worker(),worker()]);
+  if(!out.length){
+    ul.innerHTML='<li class="note fail">'+(blocked
+      ? 'No trend series on file yet. Run the <em>Refresh trend series</em> workflow '
+        +'once from the Actions tab and this fills in.'
+      : 'The news measure returned nothing.')+'</li>';
+    return;
+  }
+  out.sort((a,b)=>b.z-a.z);
+  const top=Math.max(...out.map(r=>Math.abs(r.z)),1);
+  ul.innerHTML="";
+  for(const r of out){
+    const li=document.createElement("li");
+    li.className="rowbtn";
+    li.innerHTML='<div class="rank"><span class="nm">'+esc(r.term)+'</span>'
+      +'<span class="bar"><i class="'+(r.z>2?"hot":"")+'" style="width:'
+      +Math.max(2,Math.abs(r.z)/top*100)+'%"></i></span>'
+      +'<span class="z">'+(r.z>0?"+":"")+r.z.toFixed(1)+'σ</span></div>';
+    li.onclick=()=>addSeries(r.term);
+    ul.appendChild(li);
+  }
+}
+
+/* ── export ─────────────────────────────────────────────── */
+
+function exportCSV(){
+  const live=state.series.filter(s=>seriesPoints(s).length);
+  if(!live.length) return;
+  const days=new Set();
+  const maps=live.map(s=>{
+    const m=new Map();
+    for(const p of seriesPoints(s)){ m.set(p.d,p.v); days.add(p.d); }
+    return m;
+  });
+  let out="date,"+live.map(s=>'"'+s.term.replace(/"/g,'""')+'"').join(",")+"\n";
+  for(const d of [...days].sort()) out+=d+","+maps.map(m=>m.has(d)?m.get(d):"").join(",")+"\n";
+  const url=URL.createObjectURL(new Blob([out],{type:"text/csv"}));
+  const a=document.createElement("a");
+  a.href=url; a.download="tally-"+state.src+"-"+iso(TODAY)+".csv"; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ── wiring ─────────────────────────────────────────────── */
+
+$("#add").onclick=()=>{ addSeries($("#q").value); $("#q").value=""; };
+$("#q").addEventListener("keydown",e=>{
+  if(e.key==="Enter"){ addSeries($("#q").value); $("#q").value=""; }});
+$("#clear").onclick=()=>{ state.series=[]; renderChips(); render(); renderSections(); };
+document.querySelectorAll(".chipbtn").forEach(b=>b.onclick=()=>addSeries(b.dataset.p));
+$("#csv").onclick=exportCSV;
+
+function seg(sel,key,cast){
+  $(sel).addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    document.querySelectorAll(sel+" button").forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+    state[key]=cast(b);
+    renderChips(); render();
+  });
+}
+seg("#srcSeg","src",b=>b.dataset.src);
+seg("#rangeSeg","range",b=>b.dataset.r==="max"?"max":Number(b.dataset.r));
+seg("#viewSeg","view",b=>b.dataset.v);
+$("#smoothBtn").onclick=e=>{
+  state.smooth=!state.smooth;
+  e.currentTarget.setAttribute("aria-pressed",String(state.smooth));
+  renderChips(); render();
+};
+
+loadAlerts();
+scanWatch();
+addSeries("hurricane");
+</script>
+</body>
+</html>
