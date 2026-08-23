@@ -59,13 +59,39 @@
   button.ghost{background:none;color:var(--ink);border:1px solid var(--ink);}
   button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 
-  .presets{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:12px 0 2px;}
+  .presets{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 0 2px;}
   .presets .lbl{font-family:'Oswald',sans-serif;font-size:10.5px;letter-spacing:.16em;
-    text-transform:uppercase;color:var(--ink-soft);margin-right:4px;}
-  .chipbtn{font-family:'Spectral',serif;font-size:14px;font-style:italic;background:none;
-    border:1px solid var(--hair);color:var(--ink-soft);padding:4px 10px;
-    text-transform:none;letter-spacing:0;}
-  .chipbtn:hover{border-color:var(--accent);color:var(--accent);background:none;}
+    text-transform:uppercase;color:var(--ink-soft);}
+  #watchlist{flex:1 1 240px;min-width:0;appearance:none;-webkit-appearance:none;
+    font-family:'Spectral',serif;font-style:italic;font-size:16px;color:var(--ink);
+    background:#fffdf7;border:1px solid var(--hair);border-radius:0;
+    padding:10px 34px 10px 12px;cursor:pointer;
+    background-image:linear-gradient(45deg,transparent 50%,var(--ink-soft) 50%),
+      linear-gradient(135deg,var(--ink-soft) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat;}
+  #watchlist:hover{border-color:var(--accent);}
+  #watchlist optgroup{font-family:'Oswald',sans-serif;font-style:normal;}
+  #watchlist option{font-style:normal;}
+
+  /* ---- enlarge ---- */
+  .chart-head .grow{margin-left:auto;font-family:'Oswald',sans-serif;font-size:10.5px;
+    letter-spacing:.12em;padding:6px 11px;background:none;color:var(--ink-soft);
+    border:1px solid var(--hair);}
+  .chart-head .grow:hover{background:var(--ink);color:var(--news);border-color:var(--ink);}
+  .chart-frame.big{position:fixed;inset:0;z-index:60;border:none;
+    background:#fffdf7;display:flex;flex-direction:column;}
+  .chart-frame.big .chart-head{flex:0 0 auto;}
+  .chart-frame.big #chartBody{flex:1 1 auto;display:flex;align-items:center;
+    padding:0 6px;overflow:auto;}
+  .chart-frame.big svg.plot{width:100%;}
+  body.locked{overflow:hidden;}
+  .turn-hint{display:none;}
+  @media(max-width:700px) and (orientation:portrait){
+    .chart-frame.big .turn-hint{display:block;font-family:'Oswald',sans-serif;
+      font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);
+      padding:0 14px 8px;}
+  }
 
   /* ---- plotted legend ---- */
   .plotted{display:flex;gap:8px;flex-wrap:wrap;padding:14px 0 10px;min-height:18px;}
@@ -250,15 +276,49 @@
 
   <div class="presets">
     <span class="lbl">Standing watch</span>
-    <button class="chipbtn" data-p="hurricane">hurricane</button>
-    <button class="chipbtn" data-p="tropical storm">tropical storm</button>
-    <button class="chipbtn" data-p="storm surge">storm surge</button>
-    <button class="chipbtn" data-p="flooding">flooding</button>
-    <button class="chipbtn" data-p="H5N1">H5N1</button>
-    <button class="chipbtn" data-p="measles">measles</button>
-    <button class="chipbtn" data-p="dengue">dengue</button>
-    <button class="chipbtn" data-p="cholera">cholera</button>
-    <button class="chipbtn" data-p="outbreak">outbreak</button>
+    <select id="watchlist" aria-label="Choose a subject to plot">
+      <option value="">Choose a subject…</option>
+      <optgroup label="Storms &amp; weather">
+        <option>hurricane</option><option>tropical storm</option><option>storm surge</option>
+        <option>typhoon</option><option>cyclone</option><option>tornado</option>
+        <option>flooding</option><option>heat wave</option><option>blizzard</option>
+      </optgroup>
+      <optgroup label="Earth &amp; climate">
+        <option>wildfire</option><option>drought</option><option>earthquake</option>
+        <option>landslide</option><option>volcano</option><option>sea level rise</option>
+        <option>deforestation</option><option>air pollution</option>
+      </optgroup>
+      <optgroup label="Health">
+        <option>outbreak</option><option>epidemic</option><option>measles</option>
+        <option>dengue</option><option>cholera</option><option>malaria</option>
+        <option>H5N1</option><option>avian influenza</option><option>polio</option>
+        <option>mpox</option><option>tuberculosis</option><option>antibiotic resistance</option>
+      </optgroup>
+      <optgroup label="War &amp; security">
+        <option>war</option><option>ceasefire</option><option>airstrike</option>
+        <option>sanctions</option><option>refugees</option><option>coup</option>
+        <option>terrorism</option><option>nuclear weapons</option><option>peace talks</option>
+      </optgroup>
+      <optgroup label="Money &amp; work">
+        <option>inflation</option><option>recession</option><option>unemployment</option>
+        <option>interest rates</option><option>tariffs</option><option>layoffs</option>
+        <option>supply chain</option><option>food prices</option><option>debt crisis</option>
+      </optgroup>
+      <optgroup label="People &amp; power">
+        <option>election</option><option>protest</option><option>strike</option>
+        <option>immigration</option><option>corruption</option><option>censorship</option>
+        <option>press freedom</option><option>human rights</option>
+      </optgroup>
+      <optgroup label="Technology">
+        <option>artificial intelligence</option><option>cyberattack</option>
+        <option>data breach</option><option>semiconductors</option>
+        <option>surveillance</option><option>misinformation</option>
+      </optgroup>
+      <optgroup label="Hardship">
+        <option>famine</option><option>displacement</option><option>evacuation</option>
+        <option>humanitarian crisis</option><option>poverty</option>
+      </optgroup>
+    </select>
   </div>
 
   <div class="plotted" id="plotted"></div>
@@ -267,7 +327,9 @@
     <div class="chart-head">
       <span class="t" id="chartTitle">The Plot</span>
       <span class="unit" id="chartUnit">indexed · each line's own peak reads 100</span>
+      <button class="grow" id="grow" aria-pressed="false">Enlarge</button>
     </div>
+    <div class="turn-hint">Turn the phone sideways for more room</div>
     <div id="chartBody">
       <div class="blank"><b>Nothing plotted yet</b>
         Type a term above, or choose one from the standing watch.<br>
@@ -354,6 +416,16 @@
     <li><a href="https://ourworldindata.org/" target="_blank" rel="noopener">Our World in Data</a><span>Long-run mortality and disease series, with sources shown.</span></li>
   </ul>
 
+  <h3 class="src-group">Further back — to read, not to plot</h3>
+  <p class="note">These reach centuries earlier than anything above, but their coverage
+    reflects what has been digitised rather than what was written, so a line drawn from
+    them would mislead. Worth searching by hand.</p>
+  <ul class="slinks">
+    <li><a href="https://www.loc.gov/collections/chronicling-america/" target="_blank" rel="noopener">Chronicling America</a><span>Over 20 million pages of American newspapers, 1736 to 1963. Free, full text, no key.</span></li>
+    <li><a href="https://guides.loc.gov/chronicling-america-topics" target="_blank" rel="noopener">Recommended topics</a><span>The Library's own guides to major events, with the search terms that actually work.</span></li>
+    <li><a href="https://www.loc.gov/ndnp/data-visualizations/" target="_blank" rel="noopener">What has been digitised</a><span>Maps and charts of the archive's own coverage — read this before trusting any count.</span></li>
+  </ul>
+
   <footer>
     The Tally · A standing department of <a href="index.html">The Quiet Desk</a><br>
     These lines count mentions, not cases · Read the official advisory before you act
@@ -369,7 +441,7 @@ const TODAY = new Date();
 const KEYS = ["#14110c","#6b1410","#2a4b6b","#4a6b2a","#6b4a14","#4a2a5c"];
 const DASH = ["none","6 4","1 4","10 4 2 4","4 3","none"];
 
-const state = { series:[], src:"archive", range:365, view:"line", smooth:true };
+const state = { series:[], src:"archive", range:365, view:"line", smooth:true, big:false };
 let nextId = 1;
 
 const pad = n => String(n).padStart(2,"0");
@@ -715,7 +787,7 @@ function fmt(v){
 }
 
 function timePlot(list){
-  const W=1000,H=380,iw=W-M.l-M.r,ih=H-M.t-M.b;
+  const W=1000, H=state.big?600:380, iw=W-M.l-M.r, ih=H-M.t-M.b;
   const svg=el("svg",{class:"plot",viewBox:"0 0 "+W+" "+H,preserveAspectRatio:"none"});
   let t0=Infinity,t1=-Infinity;
   const prep=list.map(s=>{
@@ -809,7 +881,7 @@ function timePlot(list){
 }
 
 function seasonPlot(list){
-  const W=1000,H=380,iw=W-M.l-M.r,ih=H-M.t-M.b;
+  const W=1000, H=state.big?600:380, iw=W-M.l-M.r, ih=H-M.t-M.b;
   const svg=el("svg",{class:"plot",viewBox:"0 0 "+W+" "+H,preserveAspectRatio:"none"});
   const s=list[0];
   let pts=s[state.src]||[];
@@ -864,7 +936,7 @@ function seasonPlot(list){
   }
 
   // year labels, pushed apart so they never overprint
-  const LGAP=11, LX=W-M.r-4;
+  const LGAP=state.big?14:11, LX=W-M.r-4;
   const marks=traces.map(t=>{
     const last=t.arr[t.arr.length-1];
     return {t, x:Math.min(X(last.doy)+5, LX-26), want:Y(last.y)+3};
@@ -1103,8 +1175,26 @@ $("#add").onclick=()=>{ addSeries($("#q").value); $("#q").value=""; };
 $("#q").addEventListener("keydown",e=>{
   if(e.key==="Enter"){ addSeries($("#q").value); $("#q").value=""; }});
 $("#clear").onclick=()=>{ state.series=[]; renderChips(); render(); renderSections(); };
-document.querySelectorAll(".chipbtn").forEach(b=>b.onclick=()=>addSeries(b.dataset.p));
+$("#watchlist").addEventListener("change",e=>{
+  const v=e.target.value;
+  if(v) addSeries(v);
+  e.target.selectedIndex=0;   // fall back to the prompt so the same term can be re-picked
+});
 $("#csv").onclick=exportCSV;
+
+const frame=$(".chart-frame");
+function setBig(on){
+  state.big=on;
+  frame.classList.toggle("big",on);
+  document.body.classList.toggle("locked",on);
+  const b=$("#grow");
+  b.textContent = on ? "Close" : "Enlarge";
+  b.setAttribute("aria-pressed",String(on));
+  render();
+}
+$("#grow").onclick=()=>setBig(!state.big);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && state.big) setBig(false); });
+window.addEventListener("orientationchange",()=>{ if(state.big) setTimeout(render,250); });
 
 function seg(sel,key,cast){
   $(sel).addEventListener("click",e=>{
