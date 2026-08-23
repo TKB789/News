@@ -10,10 +10,17 @@ const START = '20170101000000';          // GDELT DOC API reaches back to 2017
 
 // GDELT throttles hard. These numbers are the difference between 3 of 18
 // landing and all 18 landing — do not lower them.
-const GAP_MS     = 6000;                 // between terms
-const RETRIES    = 3;                    // attempts per term
-const BACKOFF_MS = [8000, 20000, 45000]; // wait before each retry
+// GDELT throttles on a rolling window, so spacing matters far more than
+// retrying. The gap adapts: it widens after every refusal and eases back
+// after every success, settling near whatever rate GDELT will actually take.
+const GAP_START  = 6000;
+const GAP_MAX    = 30000;
+const GAP_MIN    = 5000;
+const RETRIES    = 2;                    // the next run picks up the rest
+const BACKOFF_MS = [10000, 25000];
 const TIMEOUT_MS = 45000;
+const MAX_RUN_MS = 40 * 60 * 1000;       // stop and commit rather than run forever
+const FRESH_MS   = 20 * 60 * 60 * 1000;  // a series younger than this can wait
 
 // Terms kept permanently on file. Add here, or to data/trends/terms.txt.
 const TERMS = [
@@ -148,51 +155,83 @@ async function main(){
   if(!existsSync(OUT)) mkdirSync(OUT, { recursive: true });
 
   const one = (process.env.TALLY_TERM || '').trim();
-  const terms = one
-    ? [one]
-    : [...new Set([...TERMS, ...loadExtraTerms()])];
+  const all = one ? [one] : [...new Set([...TERMS, ...loadExtraTerms()])];
 
-  if(one) console.log(`Adding a single term: "${one}"\n`);
-  else    console.log(`${terms.length} terms to fetch.\n`);
+  // What is already on disk, and how old is it?
+  const age = new Map();
+  for(const t of all){
+    const f = `${OUT}/${slug(t)}.json`;
+    if(!existsSync(f)) continue;
+    try{
+      const j = JSON.parse(readFileSync(f, 'utf8'));
+      if(j.pts?.length) age.set(t, j.fetched || 0);
+    }catch{}
+  }
 
-  let ok = 0, kept = 0, lost = 0;
-  const manifest = [];
+  // Missing terms first, then the stalest. A partial run therefore always
+  // makes progress on the gaps rather than re-fetching what already works.
+  const queue = one ? [one] : all.slice().sort((a, b) => {
+    const A = age.has(a) ? age.get(a) : -1;
+    const B = age.has(b) ? age.get(b) : -1;
+    return A - B;
+  });
 
-  for(const term of terms){
+  const missing = queue.filter(t => !age.has(t)).length;
+  console.log(`${all.length} terms total — ${age.size} on file, ${missing} missing.`);
+  if(!one) console.log(`Fetching missing first, then the stalest.\n`);
+
+  const began = Date.now();
+  let gap = GAP_START;
+  let ok = 0, kept = 0, lost = 0, skipped = 0, stopped = false;
+
+  for(const term of queue){
+    if(Date.now() - began > MAX_RUN_MS){
+      stopped = true;
+      console.log(`\nTime budget reached — committing what is done and stopping.`);
+      break;
+    }
+    // leave recently-fetched series alone so the run spends its time on gaps
+    if(!one && age.has(term) && Date.now() - age.get(term) < FRESH_MS){
+      skipped++;
+      continue;
+    }
+
     const file = `${OUT}/${slug(term)}.json`;
     try{
       const pts = await fetchSeries(term);
       writeFileSync(file, JSON.stringify({ term, fetched: Date.now(), pts }, null, 0));
-      manifest.push({ term, slug: slug(term), days: pts.length });
       ok++;
-      console.log(`✓ ${term}: ${pts.length} days`);
+      gap = Math.max(GAP_MIN, Math.round(gap * 0.9));      // ease off
+      console.log(`OK   ${term}: ${pts.length} days  (gap now ${Math.round(gap/1000)}s)`);
     }catch(e){
-      // keep whatever an earlier run committed rather than dropping the term
+      gap = Math.min(GAP_MAX, Math.round(gap * 1.6));      // back away
       if(existsSync(file)){
-        try{
-          const old = JSON.parse(readFileSync(file, 'utf8'));
-          manifest.push({ term, slug: slug(term), days: old.pts?.length || 0, stale: true });
-          kept++;
-          console.warn(`· ${term}: ${e.message} — keeping the copy on file`);
-        }catch{ lost++; console.warn(`✗ ${term}: ${e.message}`); }
+        kept++;
+        console.warn(`KEPT ${term}: ${e.message}  (gap now ${Math.round(gap/1000)}s)`);
       }else{
         lost++;
-        console.warn(`✗ ${term}: ${e.message}`);
+        console.warn(`MISS ${term}: ${e.message}  (gap now ${Math.round(gap/1000)}s)`);
       }
     }
-    if(terms.length > 1) await sleep(GAP_MS);
+    await sleep(gap);
   }
 
-  if(one && ok) {
+  if(one && ok){
     if(rememberTerm(one)) console.log(`Added "${one}" to ${EXTRA} so it stays current.`);
   }
 
   const onFile = buildIndex();
-  console.log(`\nFetched ${ok}, kept ${kept} from earlier runs, missing ${lost}.`);
-  console.log(`${onFile.length} terms now on file: ${onFile.map(t => t.term).join(', ')}`);
+  const still  = all.filter(t => !onFile.some(o => o.term === t));
 
-  // Fail the run only if nothing at all is on file, so a partial
-  // throttle does not turn the Actions tab red every morning.
+  console.log(`\nFetched ${ok}, kept ${kept}, failed ${lost}, skipped ${skipped} as still fresh.`);
+  console.log(`${onFile.length} of ${all.length} terms now on file.`);
+  if(still.length){
+    console.log(`\nStill missing (${still.length}): ${still.join(', ')}`);
+    console.log(`Run this workflow again — it fetches the gaps first, so a`);
+    console.log(`second run is short and usually finishes them off.`);
+  }
+  if(stopped) console.log(`\nStopped on the time budget, not on an error.`);
+
   if(!onFile.length) process.exit(1);
 }
 
