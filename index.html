@@ -39,6 +39,9 @@
     font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--ink-soft);justify-content:center;text-align:center;flex-wrap:wrap;}
   .sub-rule .star{border:none;background:none;}
+  .sub-rule .dept-link{color:var(--accent);text-decoration:none;font-weight:600;
+    border-bottom:1px solid var(--accent);}
+  .sub-rule .dept-link:hover{color:var(--ink);border-color:var(--ink);}
 
   /* ---- edition / day selector ---- */
   .days{display:flex;gap:0;overflow-x:auto;padding:0;margin:0 0 2px;
@@ -243,6 +246,8 @@
       <span id="dateline">—</span>
       <span>·</span>
       <span id="count">All the day's quiet news</span>
+      <span>·</span>
+      <a class="dept-link" href="barometer.html">The Barometer ›</a>
     </div>
   </header>
 
