@@ -180,7 +180,23 @@
   .art-more{font-family:'Spectral',serif;font-style:italic;font-size:14px;
     color:var(--ink-soft);padding:9px 0 9px 14px;border-top:1px dotted var(--hair);}
 
+  /* ---- what these lines are not ---- */
+  .caveat{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+    margin:20px 0 0;padding:13px 0;display:flex;gap:16px;align-items:flex-start;}
+  .caveat .tag{font-family:'Oswald',sans-serif;font-size:10.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--accent);white-space:nowrap;flex:0 0 auto;
+    padding-top:4px;}
+  .caveat p{margin:0;font-family:'Spectral',serif;font-style:italic;font-size:15.5px;
+    line-height:1.5;color:var(--ink-soft);}
+  .caveat p b{font-style:normal;font-weight:600;color:var(--ink);}
+  @media(max-width:600px){.caveat{flex-direction:column;gap:7px;}
+    .caveat .tag{padding-top:0;}}
+
   /* ---- sources ---- */
+  .src-group{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-soft);margin:22px 0 8px;
+    border-bottom:1px solid var(--hair);padding-bottom:5px;}
+  .src-group:first-of-type{margin-top:6px;}
   .slinks{list-style:none;margin:0;padding:0;
     display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px 34px;}
   .slinks li{font-family:'Spectral',serif;font-size:15px;line-height:1.4;
@@ -288,6 +304,15 @@
     </div>
   </div>
 
+  <div class="caveat">
+    <span class="tag">A note on these lines</span>
+    <p>Every measure on this page counts <b>mentions</b> — reports filed, share of coverage,
+      articles read. None of them counts cases, deaths, wind speed or rainfall. Attention
+      rises and falls with the news cycle rather than with the danger, and the worst-hit
+      places are often the least written about. For what actually happened, use the official
+      counts below.</p>
+  </div>
+
   <div class="cat-head"><span class="cat-name">The Wires</span></div>
   <div class="cat-rule"></div>
   <div class="cols">
@@ -307,20 +332,31 @@
 
   <div class="cat-head"><span class="cat-name">Instruments</span></div>
   <div class="cat-rule"></div>
+
+  <h3 class="src-group">What this page counts — mentions</h3>
   <ul class="slinks">
-    <li><a href="index.html">This paper's archive</a><span>Sixty days of captured editions, counted by hand from <code>data/</code>.</span></li>
-    <li><a href="https://api.gdeltproject.org/api/v2/doc/doc?query=hurricane&amp;mode=timelinevol&amp;format=html&amp;timespan=1y" target="_blank" rel="noopener">GDELT news volume</a><span>Share of worldwide coverage, 2017 onward. Free, no key.</span></li>
-    <li><a href="https://wikimedia.org/api/rest_v1/" target="_blank" rel="noopener">Wikimedia pageviews</a><span>Daily article reads, 2015 onward. Free, no key.</span></li>
-    <li><a href="https://www.weather.gov/documentation/services-web-api" target="_blank" rel="noopener">NWS alerts</a><span>Live American watches and warnings.</span></li>
-    <li><a href="https://www.nhc.noaa.gov/" target="_blank" rel="noopener">National Hurricane Center</a><span>Official forecasts, cones and advisories.</span></li>
-    <li><a href="https://www.nhc.noaa.gov/data/#hurdat" target="_blank" rel="noopener">HURDAT2</a><span>Every Atlantic track since 1851, as plain text.</span></li>
-    <li><a href="https://www.who.int/emergencies/disease-outbreak-news" target="_blank" rel="noopener">WHO outbreak news</a><span>Verified global outbreak reports.</span></li>
+    <li><a href="index.html">This paper's archive</a><span>Sixty days of captured editions, counted from <code>data/</code>.</span></li>
+    <li><a href="https://api.gdeltproject.org/api/v2/doc/doc?query=hurricane&amp;mode=timelinevol&amp;format=html&amp;timespan=1y" target="_blank" rel="noopener">GDELT news volume</a><span>Share of worldwide coverage, 2017 onward. A share, so it falls when unrelated news is loud.</span></li>
+    <li><a href="https://wikimedia.org/api/rest_v1/" target="_blank" rel="noopener">Wikimedia pageviews</a><span>Daily article reads, 2015 onward. English Wikipedia only.</span></li>
+  </ul>
+
+  <h3 class="src-group">What actually happened — official counts</h3>
+  <ul class="slinks">
+    <li><a href="https://www.nhc.noaa.gov/" target="_blank" rel="noopener">National Hurricane Center</a><span>Live forecasts, cones, wind speeds and advisories. The authority on Atlantic storms.</span></li>
+    <li><a href="https://www.nhc.noaa.gov/data/#hurdat" target="_blank" rel="noopener">HURDAT2</a><span>Best-track record of every Atlantic storm since 1851, as plain text.</span></li>
+    <li><a href="https://www.weather.gov/documentation/services-web-api" target="_blank" rel="noopener">NWS alerts</a><span>Live American watches and warnings, feeding The Wires above.</span></li>
+    <li><a href="https://www.who.int/emergencies/disease-outbreak-news" target="_blank" rel="noopener">WHO outbreak news</a><span>Verified global outbreak reports with confirmed case counts.</span></li>
     <li><a href="https://www.cdc.gov/outbreaks/" target="_blank" rel="noopener">CDC investigations</a><span>American case counts as they are confirmed.</span></li>
+    <li><a href="https://www.gdacs.org/" target="_blank" rel="noopener">GDACS</a><span>Automatic severity and population-exposure estimates within hours of an event.</span></li>
+    <li><a href="https://reliefweb.int/" target="_blank" rel="noopener">ReliefWeb</a><span>UN situation reports: people affected, displaced, reached.</span></li>
+    <li><a href="https://www.emdat.be/" target="_blank" rel="noopener">EM-DAT</a><span>Deaths and economic losses for 27,000 disasters since 1900. Free for research use.</span></li>
+    <li><a href="https://earthquake.usgs.gov/" target="_blank" rel="noopener">USGS earthquakes</a><span>Magnitude, depth and shaking intensity, worldwide, in near real time.</span></li>
+    <li><a href="https://ourworldindata.org/" target="_blank" rel="noopener">Our World in Data</a><span>Long-run mortality and disease series, with sources shown.</span></li>
   </ul>
 
   <footer>
     The Tally · A standing department of <a href="index.html">The Quiet Desk</a><br>
-    Attention is not the same as danger · Read the official advisory before you act
+    These lines count mentions, not cases · Read the official advisory before you act
   </footer>
 </div>
 
