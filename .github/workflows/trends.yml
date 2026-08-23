@@ -1,0 +1,38 @@
+name: Refresh trend series
+
+on:
+  schedule:
+    # once a day, 05:20 UTC — the series is daily, so more often buys nothing
+    - cron: '20 5 * * *'
+  workflow_dispatch:        # lets you run it manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  trends:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Fetch trend series
+        run: node scripts/trends.mjs
+
+      - name: Commit series
+        run: |
+          git config user.name  "quiet-desk-bot"
+          git config user.email "actions@github.com"
+          git add data/trends/
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git pull --rebase --autostash || true
+            git commit -m "Trends $(date -u +%Y-%m-%d) UTC"
+            git push
+          fi
