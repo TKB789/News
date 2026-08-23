@@ -75,7 +75,7 @@
   #watchlist option{font-style:normal;}
 
   /* ---- enlarge ---- */
-  .chart-head .grow{margin-left:auto;font-family:'Oswald',sans-serif;font-size:10.5px;
+  .chart-head .grow{flex:0 0 auto;align-self:flex-start;font-family:'Oswald',sans-serif;font-size:10.5px;
     letter-spacing:.12em;padding:6px 11px;background:none;color:var(--ink-soft);
     border:1px solid var(--hair);}
   .chart-head .grow:hover{background:var(--ink);color:var(--news);border-color:var(--ink);}
@@ -109,8 +109,9 @@
 
   /* ---- the chart, set like a printed table ---- */
   .chart-frame{background:#fffdf7;border:1px solid var(--rule);position:relative;}
-  .chart-head{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;
+  .chart-head{display:flex;gap:12px;align-items:baseline;
     padding:11px 14px;border-bottom:1px solid var(--rule);}
+  .chart-head .meta{flex:1 1 auto;min-width:0;}
   .chart-head .t{font-family:'Playfair Display',serif;font-weight:700;font-size:20px;
     text-transform:uppercase;letter-spacing:.02em;}
   .chart-head .unit{font-family:'Oswald',sans-serif;font-size:10.5px;letter-spacing:.1em;
@@ -325,8 +326,10 @@
 
   <div class="chart-frame">
     <div class="chart-head">
-      <span class="t" id="chartTitle">The Plot</span>
-      <span class="unit" id="chartUnit">indexed · each line's own peak reads 100</span>
+      <span class="meta">
+        <span class="t" id="chartTitle">The Plot</span><br>
+        <span class="unit" id="chartUnit">indexed · each line's own peak reads 100</span>
+      </span>
       <button class="grow" id="grow" aria-pressed="false">Enlarge</button>
     </div>
     <div class="turn-hint">Turn the phone sideways for more room</div>
@@ -730,6 +733,23 @@ const SRC_LABEL={archive:"Reports in this paper",news:"Share of world news",wiki
 
 function render(){
   const body=$("#chartBody");
+
+  // Set the heading first: the early returns below used to leave a stale
+  // title on screen, so the header could name a different measure than the
+  // one actually selected.
+  const ready0=state.series.filter(s=>s.status==="ready");
+  $("#chartTitle").textContent = state.series.length ? SRC_LABEL[state.src] : "The Plot";
+  let unit = state.view==="season"
+    ? "by day of year · one line per year · indexed"
+    : (state.src==="archive"
+        ? "indexed · sixty days of captured editions"
+        : "indexed · each line's own peak reads 100");
+  if(state.src==="wiki"){
+    const names=ready0.filter(s=>s.article && seriesPoints(s).length>1).map(s=>s.article);
+    if(names.length) unit += " · reading " + names.join(", ");
+  }
+  $("#chartUnit").textContent = unit;
+
   if(!state.series.length){
     body.innerHTML='<div class="blank"><b>Nothing plotted yet</b>'
       +'Type a term above, or choose one from the standing watch.<br>'
@@ -753,8 +773,10 @@ function render(){
         +'only works for terms kept on file in this repository.<br><br>'
         +(onFile.length
           ? 'On file now: '+onFile.map(esc).join(' · ')
-            +'<br><br>Add more by editing the list in <em>scripts/trends.mjs</em>.'
-          : 'Nothing on file yet — run the <em>Refresh trend series</em> workflow once.')
+            +'<br><br>To add this one: Actions tab › Refresh trend series › Run workflow, '
+            +'type “'+esc(ready[0].term)+'” into the box, and reload in a minute.'
+          : 'Nothing on file yet — run the <em>Refresh trend series</em> workflow once, '
+            +'leaving the term box empty.')
         +'<br><br>This paper and Lookups work for any term.</div>';
       return;
     }
@@ -765,17 +787,6 @@ function render(){
       +'<br>Try another measure, a wider span, or a broader word.</div>';
     return;
   }
-  $("#chartTitle").textContent=SRC_LABEL[state.src];
-  let unit = state.view==="season"
-    ? "by day of year · one line per year · indexed"
-    : (state.src==="archive"
-        ? "indexed · sixty days of captured editions"
-        : "indexed · each line's own peak reads 100");
-  if(state.src==="wiki"){
-    const names=live.filter(s=>s.article).map(s=>s.article);
-    if(names.length) unit += " · reading " + names.join(", ");
-  }
-  $("#chartUnit").textContent = unit;
   body.innerHTML="";
   body.appendChild(state.view==="season" ? seasonPlot(live) : timePlot(live));
 }
