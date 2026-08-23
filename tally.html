@@ -454,6 +454,21 @@ async function fetchArchive(term){
 const slug = t => t.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 let TRENDS_INDEX = null;
 
+/* The Worker address is read from data/config.json so you never have to edit
+   this file. That file looks like:  { "newsProxy": "https://x.workers.dev" }
+   You can also hard-code it here instead, if you prefer. */
+const NEWS_PROXY = "";
+let CONFIG = null;
+
+async function config(){
+  if(CONFIG) return CONFIG;
+  try{
+    const r = await fetch("data/config.json");
+    CONFIG = r.ok ? await r.json() : {};
+  }catch{ CONFIG = {}; }
+  return CONFIG;
+}
+
 async function trendsIndex(){
   if(TRENDS_INDEX) return TRENDS_INDEX;
   try{
@@ -473,7 +488,21 @@ async function fetchNews(term){
     }
   }catch{}
 
-  // 2. live, direct — works on some browsers, blocked on others
+  // 2. through the Worker, if one is set up — works for any term
+  const proxy = ((await config()).newsProxy || NEWS_PROXY || "").trim();
+  if(proxy){
+    try{
+      const r = await fetch(proxy.replace(/\/+$/,"")+"/?q="+encodeURIComponent(term));
+      const j = await r.json();
+      if(r.ok && j.pts && j.pts.length) return j.pts;
+      if(j.error) throw new Error(j.error);
+    }catch(e){
+      if(e && e.message && !/Load failed|Failed to fetch|NetworkError/i.test(e.message)) throw e;
+      // fall through and try direct
+    }
+  }
+
+  // 3. direct — works on some browsers, blocked on others
   const q = /\s/.test(term) ? '"'+term+'"' : term;
   const url = "https://api.gdeltproject.org/api/v2/doc/doc?query="+encodeURIComponent(q)
     + "&mode=timelinevol&format=json&startdatetime=20170101000000&enddatetime="+ymd(TODAY)+"000000";
@@ -537,15 +566,30 @@ async function addSeries(term){
   state.series.push(s);
   renderChips(); render();
 
-  await Promise.all([
-    fetchArchive(term).then(r=>{ s.archive=r.pts; s.sections=r.bySection; })
-      .catch(e=>{ s.archive=[]; s.err.archive=e.message; }),
+  const jobs = [
     fetchNews(term).then(d=>{ s.news=d; })
       .catch(e=>{ s.news=[]; s.err.news=e.message; s.errBlocked=!!e.blocked; }),
     fetchWiki(term).then(d=>{ s.wiki=d.pts; s.article=d.title; })
       .catch(e=>{ s.wiki=[]; s.err.wiki=e.message; })
-  ]);
+  ];
+  // The archive is 12 MB across 61 files. Only pay for it if it is on screen,
+  // or already loaded from an earlier search this session.
+  if(state.src==="archive" || ARCHIVE){
+    jobs.push(fetchArchive(term).then(r=>{ s.archive=r.pts; s.sections=r.bySection; })
+      .catch(e=>{ s.archive=[]; s.err.archive=e.message; }));
+  }
+  await Promise.all(jobs);
   s.status="ready";
+  renderChips(); render(); renderSections();
+}
+
+// Filling in the archive for anything plotted before the reader switched to it
+async function backfillArchive(){
+  const need = state.series.filter(s=>s.status==="ready" && !s.archive);
+  if(!need.length) return;
+  await Promise.all(need.map(s =>
+    fetchArchive(s.term).then(r=>{ s.archive=r.pts; s.sections=r.bySection; })
+      .catch(e=>{ s.archive=[]; s.err.archive=e.message; })));
   renderChips(); render(); renderSections();
 }
 
@@ -1072,6 +1116,9 @@ function seg(sel,key,cast){
   });
 }
 seg("#srcSeg","src",b=>b.dataset.src);
+$("#srcSeg").addEventListener("click",e=>{
+  if(e.target.closest("button") && state.src==="archive") backfillArchive();
+});
 seg("#rangeSeg","range",b=>b.dataset.r==="max"?"max":Number(b.dataset.r));
 seg("#viewSeg","view",b=>b.dataset.v);
 $("#smoothBtn").onclick=e=>{
@@ -1082,7 +1129,7 @@ $("#smoothBtn").onclick=e=>{
 
 loadAlerts();
 scanWatch();
-addSeries("hurricane");
+render();
 </script>
 </body>
 </html>
