@@ -127,7 +127,12 @@ const CATEGORIES = [
     "https://feeds.bbci.co.uk/news/technology/rss.xml",
     "https://www.technologyreview.com/feed/",
     "https://restofworld.org/feed/latest/" ]},
-  { name:"World & Conflict", minSrc:2, look:"the harder current events", feeds:[
+  // minSrc:2 wants a second outlet before a story runs here. That rule is right
+  // for rumour, wrong for scoops — an investigative piece is single-source by
+  // definition. minSrcExempt lets named outlets through on their own.
+  { name:"World & Conflict", minSrc:2,
+    minSrcExempt:[/propublica\.org/i, /theintercept\.com/i, /un\.org/i, /theconversation\.com/i],
+    look:"the harder current events", feeds:[
     "https://www.allsides.com/rss/news",
     "https://feeds.bbci.co.uk/news/world/rss.xml",
     "https://www.aljazeera.com/xml/rss/all.xml",
@@ -166,7 +171,29 @@ const CATEGORIES = [
     "https://restofworld.org/feed/latest/" ]},
   { name:"Weather & Civil Alerts", look:"calm, not urgent", feeds:[
     "https://www.sciencedaily.com/rss/earth_climate/natural_disasters.xml",
-    "https://gdacs.org/xml/rss.xml" ]}
+    "https://gdacs.org/xml/rss.xml" ]},
+  // Domestic politics had no section at all before now: legislatures, courts,
+  // elections and executive action only turned up when a world desk covered
+  // them. Delete or trim this block freely if it isn't your patch.
+  { name:"Politics & Power", look:"legislatures, courts, elections", feeds:[
+    "https://feeds.npr.org/1014/rss.xml",
+    "https://www.theguardian.com/us-news/us-politics/rss",
+    "https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml",
+    "https://feeds.bbci.co.uk/news/politics/rss.xml",
+    "https://www.theguardian.com/politics/rss",
+    "https://rss.politico.com/politics-news.xml",
+    "https://thehill.com/news/feed/",
+    "https://www.scotusblog.com/feed/",
+    "https://www.euractiv.com/feed/" ]},
+  // Runs last on purpose: every category above claims a story first, so this
+  // section ends up holding what the rest of the paper missed rather than
+  // repeating it.
+  { name:"Crowdsourced", look:"what readers pushed to the top", feeds:[
+    "https://www.reddit.com/r/worldnews/.rss?limit=50",
+    "https://www.reddit.com/r/news/.rss?limit=50",
+    "https://www.reddit.com/r/inthenews/.rss?limit=50",
+    "https://www.reddit.com/r/geopolitics/.rss?limit=50",
+    "https://www.reddit.com/r/UpliftingNews/.rss?limit=50" ]}
 ];
 
 const DATA_DIR = 'data';
@@ -175,6 +202,75 @@ function todayKey(){
   return new Date().toISOString().slice(0,10);   // UTC, stable for scheduled runs
 }
 function domain(u){ try{ return new URL(u).hostname.replace(/^www\./,''); }catch{ return ''; } }
+
+// ---- link normalisation ----
+// Two outlets' feeds often hand out the same article with different tracking
+// junk on the end. Stripping it makes the "have I already seen this?" check
+// actually work, and lets a Reddit submission match the original article.
+const TRACK = /^(utm_|at_|cmp$|ito$|ns_|ocid$|smid$|ref$|ref_src$|fbclid$|gclid$|mc_cid$|mc_eid$|s_cid$|__twitter_impression$|guccounter$)/i;
+function normLink(u){
+  if(!u) return '';
+  try{
+    const url = new URL(u);
+    url.hash = '';
+    url.protocol = 'https:';
+    url.hostname = url.hostname.replace(/^www\./,'').toLowerCase();
+    for(const k of [...url.searchParams.keys()]) if(TRACK.test(k)) url.searchParams.delete(k);
+    let s = url.toString().replace(/\/$/,'');
+    return s;
+  }catch{ return String(u).trim(); }
+}
+// the identity used for de-duplication everywhere
+function idOf(it){ return normLink(it.link) || (it.title||'').toLowerCase().trim(); }
+
+// ---- Reddit ----
+// Reddit's feeds are Atom, and a link post's <link> points at the comment
+// thread, not the article. The real URL is buried in the escaped HTML of
+// <content> as an anchor labelled [link]. We pull it out so the item is
+// credited to the outlet that actually reported it — which also means it
+// de-dupes against the same story arriving through a normal feed, and counts
+// properly in the corroboration pass instead of inflating reddit.com.
+function isReddit(u){ return /(^|\.)reddit\.com/i.test(domain(u)); }
+function unescapeEntities(s){
+  return (s||'')
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,'$1')
+    .replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(+n))
+    .replace(/&#x([0-9a-f]+);/gi,(_,n)=>String.fromCharCode(parseInt(n,16)))
+    .replace(/&quot;/g,'"').replace(/&apos;/g,"'")
+    .replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+    .replace(/&amp;/g,'&');
+}
+function subredditOf(block, feedUrl){
+  const m = block.match(/<category[^>]*\blabel=["']([^"']+)["']/i);
+  if(m) return decode(m[1]);
+  const f = (feedUrl||'').match(/\/r\/([A-Za-z0-9_]+)/);
+  return f ? 'r/'+f[1] : 'reddit';
+}
+function parseRedditEntry(block, feedUrl){
+  const permalink = (block.match(/<link[^>]*\shref=["']([^"']+)["']/i)||[])[1] || '';
+  const html = unescapeEntities(tag(block,'content') || tag(block,'summary'));
+  // the submitted URL, i.e. the anchor whose text is [link]
+  const linkAnchor = html.match(/<a\s+href=["']([^"']+)["'][^>]*>\s*\[link\]\s*<\/a>/i);
+  // hrefs come through double-escaped (&amp;amp;) — unescape once more
+  const outboundRaw = linkAnchor ? unescapeEntities(linkAnchor[1]).trim() : '';
+  const outbound = outboundRaw && !isReddit(outboundRaw) ? outboundRaw : '';
+  // self-post body: everything inside the md div, minus the submitted-by tail
+  let body = (html.match(/<div class=["']md["']>([\s\S]*?)<\/div>/i)||[])[1] || '';
+  body = cleanBlurb(body).replace(/\s*submitted by\s*\/u\/\S+\s*$/i,'').trim();
+  const link = outbound || permalink;
+  const sub  = subredditOf(block, feedUrl);
+  const date = tag(block,'published') || tag(block,'updated');
+  let iso=null; if(date){ const d=new Date(decode(date)); if(!isNaN(d)) iso=d.toISOString(); }
+  return {
+    title: decode(tag(block,'title')),
+    link,
+    blurb: body,
+    date: iso,
+    src: outbound ? domain(outbound) : 'reddit.com',
+    via: sub,                 // shown in the byline as "via r/worldnews"
+    discuss: permalink        // link to the thread itself
+  };
+}
 
 function decode(s){
   return (s||'')
@@ -208,6 +304,7 @@ function attrLink(block){
 function parseFeed(xml, feedUrl){
   // split into <item> or <entry> blocks
   const blocks = xml.match(/<(item|entry)(?:\s[^>]*)?>[\s\S]*?<\/\1>/gi) || [];
+  if(isReddit(feedUrl)) return blocks.map(b=>parseRedditEntry(b, feedUrl)).filter(i=>i.title);
   return blocks.map(b=>{
     let link = decode(tag(b,'link')) || attrLink(b);
     link = (link||'').trim();
@@ -223,14 +320,31 @@ function parseFeed(xml, feedUrl){
   }).filter(i=>i.title);
 }
 
-async function fetchFeed(url){
+async function fetchOnce(url){
   const ctrl = new AbortController();
   const t = setTimeout(()=>ctrl.abort(), 20000);
   try{
-    const res = await fetch(url, { signal:ctrl.signal, headers:{ 'User-Agent':'QuietDeskBot/1.0 (+rss reader)' }});
+    const res = await fetch(url, { signal:ctrl.signal, headers:{
+      'User-Agent':'QuietDeskBot/1.0 (+rss reader; contact via repo issues)',
+      'Accept':'application/rss+xml, application/atom+xml, application/xml;q=0.9, */*;q=0.8'
+    }});
     if(!res.ok) throw new Error('HTTP '+res.status);
     return parseFeed(await res.text(), url);
   } finally { clearTimeout(t); }
+}
+// Reddit rate-limits and sometimes 403s requests from cloud IP ranges, which is
+// what GitHub Actions runs on. If www fails we retry the old.reddit mirror once
+// before giving up, and the failure is named in the log either way.
+function mirrors(url){
+  if(isReddit(url) && /\/\/www\.reddit\.com/i.test(url)) return [url, url.replace('//www.reddit.com','//old.reddit.com')];
+  return [url];
+}
+async function fetchFeed(url){
+  let last;
+  for(const u of mirrors(url)){
+    try{ return await fetchOnce(u); }catch(e){ last = e; }
+  }
+  throw new Error(`${url} → ${last && last.message}`);
 }
 
 function loadEarlierLinks(tk){
@@ -241,7 +355,7 @@ function loadEarlierLinks(tk){
     if(!m || m[1] >= tk) continue;            // only days strictly before today
     try{
       const day = JSON.parse(readFileSync(`${DATA_DIR}/${f}`,'utf8'));
-      day.cats.forEach(c=>c.items.forEach(i=>set.add(i.link||i.title)));
+      day.cats.forEach(c=>c.items.forEach(i=>set.add(idOf(i))));
     }catch{}
   }
   return set;
@@ -260,7 +374,7 @@ function scrubSnapshots(){
         const n = c.items.length;
         c.items = c.items.filter(i => {
           if(excluded(i) || catExcluded(c.name, i)) return false;
-          const id = i.link || i.title;
+          const id = idOf(i);
           if(seen.has(id)) return false;   // duplicate from another category
           seen.add(id);
           return true;
@@ -287,7 +401,7 @@ async function main(){
     try{ existing = JSON.parse(readFileSync(`${DATA_DIR}/${tk}.json`,'utf8')); }catch{}
   }
   const todaySeen = new Set();
-  existing.cats.forEach(c=>c.items.forEach(i=>todaySeen.add(i.link||i.title)));
+  existing.cats.forEach(c=>c.items.forEach(i=>todaySeen.add(idOf(i))));
 
   const cats = [];
   let ok=0, fail=0;
@@ -296,19 +410,19 @@ async function main(){
     const items = prior ? [...prior.items] : [];
     // dedupe across ALL categories, not just this one (first category wins)
     const localSeen = todaySeen;
-    items.forEach(i=>localSeen.add(i.link||i.title));
+    items.forEach(i=>localSeen.add(idOf(i)));
     const results = await Promise.allSettled(cat.feeds.map(fetchFeed));
     for(const r of results){
       if(r.status==='fulfilled'){ ok++;
         for(const it of r.value){
-          const id = it.link||it.title;
+          const id = idOf(it);
           if(excluded(it)) continue;               // blocklisted topic (global)
           if(catExcluded(cat.name, it)) continue;  // blocklisted for this section
           if(before.has(id)) continue;        // seen an earlier day → not new
           if(localSeen.has(id)) continue;     // already in today's snapshot
           localSeen.add(id); items.push(it);
         }
-      } else fail++;
+      } else { fail++; console.log(`  feed failed → ${r.reason && r.reason.message}`); }
     }
     items.sort((a,b)=> new Date(b.date||0) - new Date(a.date||0));
     const kept = PER_CAT > 0 ? items.slice(0,PER_CAT) : items;
@@ -343,10 +457,12 @@ async function main(){
     all.forEach((it, i) => { it.srcs = clusterSrcs.get(find(i)).size; });
     // per-category minimum-source filter
     for(const c of cats){
-      const min = CATEGORIES.find(k => k.name === c.name)?.minSrc || 1;
+      const def = CATEGORIES.find(k => k.name === c.name);
+      const min = def?.minSrc || 1;
+      const exempt = def?.minSrcExempt || [];
       if(min > 1){
         const n = c.items.length;
-        c.items = c.items.filter(i => i.srcs >= min);
+        c.items = c.items.filter(i => i.srcs >= min || exempt.some(re => re.test(i.link||'') || re.test(i.src||'')));
         if(n - c.items.length) console.log(`${c.name}: held back ${n - c.items.length} single-source item(s).`);
       }
     }
