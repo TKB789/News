@@ -231,6 +231,8 @@
   .spin{display:inline-block;width:10px;height:10px;border:2px solid var(--hair);
     border-top-color:var(--ink);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px;margin-right:6px;}
   @keyframes sp{to{transform:rotate(360deg);}}
+  .meta a.via{color:var(--ink-soft);text-decoration:none;border-bottom:1px dotted var(--hair);}
+  .meta a.via:hover{color:var(--accent);}
 </style>
 </head>
 <body>
@@ -510,7 +512,7 @@ function articleNode(i,q,isLead,num){
     if($("#favbtn").getAttribute("aria-pressed")==="true" && !isFav(i)) art.remove(); });
   const body=document.createElement("div"); body.className="body";
   const numTag = num?`<span class="art-num">${num}</span>`:"";
-  body.innerHTML=`<div class="meta">${numTag}<span class="src">${i.src||"source"}</span>${i.date?" · "+timeAgo(i.date):""}${i.cat?' · '+i.cat:''}${i.srcs>1?` · <span class="corrob" title="Similar story found on ${i.srcs} outlets">✓ ${i.srcs} sources</span>`:''}</div>
+  body.innerHTML=`<div class="meta">${numTag}<span class="src">${i.src||"source"}</span>${i.date?" · "+timeAgo(i.date):""}${i.cat?' · '+i.cat:''}${i.via?` · via <a class="via" href="${i.discuss||i.link}" target="_blank" rel="noopener">${i.via}</a>`:''}${i.srcs>1?` · <span class="corrob" title="Similar story found on ${i.srcs} outlets">✓ ${i.srcs} sources</span>`:''}</div>
     <h3><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a></h3>
     ${i.blurb?`<p class="blurb">${i.blurb}</p>`:""}`;
   const read=document.createElement("button"); read.className="mini-read"; read.textContent="▶ Speed-read";

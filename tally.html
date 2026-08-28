@@ -230,6 +230,7 @@
     padding:8px 0;border-bottom:1px solid var(--hair);}
   .slinks a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--accent);}
   .slinks a:hover{color:var(--accent);}
+  .slinks li>b{font-weight:600;color:var(--ink);}
   .slinks span{display:block;font-size:13.5px;font-style:italic;color:var(--ink-soft);margin-top:2px;}
 
   footer{margin-top:46px;padding-top:14px;border-top:3px double var(--rule);
@@ -400,16 +401,16 @@
 
   <h3 class="src-group">What this page counts — mentions</h3>
   <ul class="slinks">
-    <li><a href="index.html">This paper's archive</a><span>Sixty days of captured editions, counted from <code>data/</code>.</span></li>
-    <li><a href="https://api.gdeltproject.org/api/v2/doc/doc?query=hurricane&amp;mode=timelinevol&amp;format=html&amp;timespan=1y" target="_blank" rel="noopener">GDELT news volume</a><span>Share of worldwide coverage, 2017 onward. A share, so it falls when unrelated news is loud.</span></li>
-    <li><a href="https://wikimedia.org/api/rest_v1/" target="_blank" rel="noopener">Wikimedia pageviews</a><span>Daily article reads, 2015 onward. English Wikipedia only.</span></li>
+    <li><a href="index.html">This paper's archive</a><span>Sixty days of captured editions, counted from the daily snapshots.</span></li>
+    <li><b>GDELT news volume</b><span>Share of worldwide coverage, 2017 onward. A share, not a count, so a line falls when unrelated news gets loud.</span></li>
+    <li><b>Wikimedia pageviews</b><span>Daily article reads, 2015 onward. English Wikipedia only, so it measures curiosity in one language.</span></li>
   </ul>
 
   <h3 class="src-group">What actually happened — official counts</h3>
   <ul class="slinks">
     <li><a href="https://www.nhc.noaa.gov/" target="_blank" rel="noopener">National Hurricane Center</a><span>Live forecasts, cones, wind speeds and advisories. The authority on Atlantic storms.</span></li>
     <li><a href="https://www.nhc.noaa.gov/data/#hurdat" target="_blank" rel="noopener">HURDAT2</a><span>Best-track record of every Atlantic storm since 1851, as plain text.</span></li>
-    <li><a href="https://www.weather.gov/documentation/services-web-api" target="_blank" rel="noopener">NWS alerts</a><span>Live American watches and warnings, feeding The Wires above.</span></li>
+    <li><a href="https://www.weather.gov/" target="_blank" rel="noopener">National Weather Service</a><span>Live American watches and warnings, feeding The Wires above.</span></li>
     <li><a href="https://www.who.int/emergencies/disease-outbreak-news" target="_blank" rel="noopener">WHO outbreak news</a><span>Verified global outbreak reports with confirmed case counts.</span></li>
     <li><a href="https://www.cdc.gov/outbreaks/" target="_blank" rel="noopener">CDC investigations</a><span>American case counts as they are confirmed.</span></li>
     <li><a href="https://www.gdacs.org/" target="_blank" rel="noopener">GDACS</a><span>Automatic severity and population-exposure estimates within hours of an event.</span></li>
